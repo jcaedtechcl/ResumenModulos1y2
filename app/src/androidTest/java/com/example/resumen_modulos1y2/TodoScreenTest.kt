@@ -26,7 +26,7 @@ class TodoScreenTest {
     @Test
     fun fab_abreFormulario_yAgregarCreaTarea() {
         composeTestRule.setContent {
-            ResumenModulos1y2Theme { TodoScreen(onAbrirCasoRecreacion = {}) }
+            ResumenModulos1y2Theme { TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {}) }
         }
 
         composeTestRule.onNodeWithTag(TAG_FAB_NUEVA_TAREA).performClick()
@@ -40,7 +40,7 @@ class TodoScreenTest {
     fun textoAMedioEscribir_sobreviveALaRecreacion() {
         val restorationTester = StateRestorationTester(composeTestRule)
         restorationTester.setContent {
-            ResumenModulos1y2Theme { TodoScreen(onAbrirCasoRecreacion = {}) }
+            ResumenModulos1y2Theme { TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {}) }
         }
 
         composeTestRule.onNodeWithTag(TAG_FAB_NUEVA_TAREA).performClick()

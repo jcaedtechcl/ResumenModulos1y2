@@ -71,6 +71,7 @@ const val TAG_FAB_NUEVA_TAREA = "fab_nueva_tarea"
 @Composable
 fun TodoScreen(
     onAbrirCasoRecreacion: () -> Unit,
+    onAbrirEjemplosLayout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var tareas by rememberSaveable(stateSaver = TareasSaver) { mutableStateOf(tareasDeEjemplo) }
@@ -102,6 +103,12 @@ fun TodoScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onAbrirEjemplosLayout) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_layout),
+                            contentDescription = "Ejemplos de layout"
+                        )
+                    }
                     IconButton(onClick = onAbrirCasoRecreacion) {
                         Icon(
                             painter = painterResource(R.drawable.ic_info),
@@ -306,7 +313,7 @@ private fun EstadoVacio(modifier: Modifier = Modifier) {
 @Composable
 fun TodoScreenPreview() {
     ResumenModulos1y2Theme {
-        TodoScreen(onAbrirCasoRecreacion = {})
+        TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {})
     }
 }
 
@@ -314,6 +321,6 @@ fun TodoScreenPreview() {
 @Composable
 fun TodoScreenDarkPreview() {
     ResumenModulos1y2Theme(darkTheme = true) {
-        TodoScreen(onAbrirCasoRecreacion = {})
+        TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {})
     }
 }
