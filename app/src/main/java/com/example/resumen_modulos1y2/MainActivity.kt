@@ -3,13 +3,17 @@ package com.example.resumen_modulos1y2
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
+import com.example.resumen_modulos1y2.ui.todo.TodoScreen
+
+private enum class Pantalla { Tareas, Recreacion }
 
 class MainActivity : ComponentActivity() {
 
@@ -26,13 +30,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ResumenModulos1y2Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    RecreacionScreen(
-                        recreaciones = recreaciones,
-                        // recreate() destruye y vuelve a crear la Activity igual que una rotación
-                        onSimularRotacion = { recreate() },
-                        modifier = Modifier.padding(innerPadding)
+                // La pantalla visible también es estado: con rememberSaveable no se vuelve a la lista al rotar
+                var pantalla by rememberSaveable { mutableStateOf(Pantalla.Tareas) }
+
+                when (pantalla) {
+                    Pantalla.Tareas -> TodoScreen(
+                        onAbrirCasoRecreacion = { pantalla = Pantalla.Recreacion }
                     )
+
+                    Pantalla.Recreacion -> {
+                        // El botón "atrás" del sistema vuelve a la lista en vez de cerrar la app
+                        BackHandler { pantalla = Pantalla.Tareas }
+                        CasoRecreacionScreen(
+                            recreaciones = recreaciones,
+                            // recreate() destruye y vuelve a crear la Activity igual que una rotación
+                            onSimularRotacion = { recreate() },
+                            onVolver = { pantalla = Pantalla.Tareas }
+                        )
+                    }
                 }
             }
         }
