@@ -14,6 +14,7 @@ import com.example.resumen_modulos1y2.ui.Leccion
 import com.example.resumen_modulos1y2.ui.componentes.ComponentesScreen
 import com.example.resumen_modulos1y2.ui.estado.EstadoScreen
 import com.example.resumen_modulos1y2.ui.layout.LayoutScreen
+import com.example.resumen_modulos1y2.ui.listas.ListasScreen
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 import com.example.resumen_modulos1y2.ui.todo.TodoScreen
 
@@ -53,6 +54,7 @@ class MainActivity : ComponentActivity() {
                     Leccion.Layout -> LayoutScreen(onVolver = volver)
                     Leccion.Componentes -> ComponentesScreen(onVolver = volver)
                     Leccion.Estado -> EstadoScreen(onVolver = volver)
+                    Leccion.Listas -> ListasScreen(onVolver = volver)
                 }
             }
         }

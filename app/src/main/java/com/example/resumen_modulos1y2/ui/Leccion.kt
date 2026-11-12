@@ -5,5 +5,6 @@ enum class Leccion(val titulo: String) {
     Recreacion("Recreación y estado"),
     Layout("Ejemplos de layout"),
     Componentes("Componentes y jerarquía"),
-    Estado("Estado y recomposición")
+    Estado("Estado y recomposición"),
+    Listas("Listas con claves estables")
 }
