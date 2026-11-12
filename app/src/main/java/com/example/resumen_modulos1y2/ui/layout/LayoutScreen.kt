@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -16,18 +15,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,12 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.resumen_modulos1y2.R
+import com.example.resumen_modulos1y2.ui.Leccion
+import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
+import com.example.resumen_modulos1y2.ui.componentes.Codigo
+import com.example.resumen_modulos1y2.ui.componentes.SeccionCard
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 
 /**
@@ -53,7 +47,6 @@ import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
  * 3. Alignment (cómo se ubican los hijos en el eje transversal)
  * 4. Modificadores y el parámetro modifier
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LayoutScreen(
     onVolver: () -> Unit,
@@ -63,24 +56,7 @@ fun LayoutScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text("Ejemplos de layout") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
+        topBar = { BarraLeccion(titulo = Leccion.Layout.titulo, onVolver = onVolver) },
         bottomBar = {
             BottomAppBar {
                 Text(
@@ -306,30 +282,6 @@ fun EtiquetaPrioridad(texto: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Card con título y descripción; el contenido se recibe como lambda con ColumnScope. */
-@Composable
-private fun SeccionCard(
-    titulo: String,
-    descripcion: String,
-    modifier: Modifier = Modifier,
-    contenido: @Composable ColumnScope.() -> Unit
-) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(text = titulo, style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = descripcion,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            contenido()
-        }
-    }
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Selector(
@@ -346,16 +298,6 @@ private fun Selector(
             )
         }
     }
-}
-
-@Composable
-private fun Codigo(texto: String) {
-    Text(
-        text = texto,
-        style = MaterialTheme.typography.bodySmall,
-        fontFamily = FontFamily.Monospace,
-        color = MaterialTheme.colorScheme.primary
-    )
 }
 
 /**

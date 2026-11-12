@@ -10,14 +10,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,9 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.resumen_modulos1y2.ui.Leccion
+import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 
 const val TAG_CAMPO_REMEMBER = "campo_remember"
@@ -123,7 +120,6 @@ fun RecreacionScreen(
 }
 
 /** RecreacionScreen dentro de su propio Scaffold, con TopAppBar y flecha para volver a las tareas. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CasoRecreacionScreen(
     recreaciones: Int,
@@ -133,19 +129,7 @@ fun CasoRecreacionScreen(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text("Recreación y estado") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = "Volver"
-                        )
-                    }
-                }
-            )
-        }
+        topBar = { BarraLeccion(titulo = Leccion.Recreacion.titulo, onVolver = onVolver) }
     ) { innerPadding ->
         RecreacionScreen(
             recreaciones = recreaciones,

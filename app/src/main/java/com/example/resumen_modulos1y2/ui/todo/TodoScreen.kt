@@ -2,6 +2,7 @@ package com.example.resumen_modulos1y2.ui.todo
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.resumen_modulos1y2.R
 import com.example.resumen_modulos1y2.model.Tarea
+import com.example.resumen_modulos1y2.ui.Leccion
 import com.example.resumen_modulos1y2.model.TareasSaver
 import com.example.resumen_modulos1y2.model.tareasDeEjemplo
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
@@ -70,12 +75,12 @@ const val TAG_FAB_NUEVA_TAREA = "fab_nueva_tarea"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(
-    onAbrirCasoRecreacion: () -> Unit,
-    onAbrirEjemplosLayout: () -> Unit,
+    onAbrirLeccion: (Leccion) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var tareas by rememberSaveable(stateSaver = TareasSaver) { mutableStateOf(tareasDeEjemplo) }
     var mostrarFormulario by rememberSaveable { mutableStateOf(false) }
+    var mostrarMenu by remember { mutableStateOf(false) }
     var textoNuevaTarea by rememberSaveable { mutableStateOf("") }
 
     val pendientes = tareas.count { !it.completada }
@@ -103,17 +108,28 @@ fun TodoScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onAbrirEjemplosLayout) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_layout),
-                            contentDescription = "Ejemplos de layout"
-                        )
-                    }
-                    IconButton(onClick = onAbrirCasoRecreacion) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_info),
-                            contentDescription = "Caso práctico: recreación"
-                        )
+                    // Menú desplegable con las pantallas de ejemplo
+                    Box {
+                        IconButton(onClick = { mostrarMenu = true }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_more_vert),
+                                contentDescription = "Ejemplos"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = mostrarMenu,
+                            onDismissRequest = { mostrarMenu = false }
+                        ) {
+                            Leccion.entries.forEach { leccion ->
+                                DropdownMenuItem(
+                                    text = { Text(leccion.titulo) },
+                                    onClick = {
+                                        mostrarMenu = false
+                                        onAbrirLeccion(leccion)
+                                    }
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -313,7 +329,7 @@ private fun EstadoVacio(modifier: Modifier = Modifier) {
 @Composable
 fun TodoScreenPreview() {
     ResumenModulos1y2Theme {
-        TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {})
+        TodoScreen(onAbrirLeccion = {})
     }
 }
 
@@ -321,6 +337,6 @@ fun TodoScreenPreview() {
 @Composable
 fun TodoScreenDarkPreview() {
     ResumenModulos1y2Theme(darkTheme = true) {
-        TodoScreen(onAbrirCasoRecreacion = {}, onAbrirEjemplosLayout = {})
+        TodoScreen(onAbrirLeccion = {})
     }
 }
