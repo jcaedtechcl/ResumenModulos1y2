@@ -6,5 +6,7 @@ enum class Leccion(val titulo: String) {
     Layout("Ejemplos de layout"),
     Componentes("Componentes y jerarquía"),
     Estado("Estado y recomposición"),
-    Listas("Listas con claves estables")
+    Listas("Listas con claves estables"),
+    Flow("Flow y StateFlow"),
+    Navegacion("Navigation Compose")
 }

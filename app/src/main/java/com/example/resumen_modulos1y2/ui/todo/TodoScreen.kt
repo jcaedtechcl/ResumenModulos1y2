@@ -53,10 +53,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.resumen_modulos1y2.R
 import com.example.resumen_modulos1y2.model.Tarea
 import com.example.resumen_modulos1y2.ui.Leccion
-import com.example.resumen_modulos1y2.model.TareasSaver
 import com.example.resumen_modulos1y2.model.tareasDeEjemplo
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 
@@ -64,21 +64,54 @@ const val TAG_CAMPO_NUEVA_TAREA = "campo_nueva_tarea"
 const val TAG_FAB_NUEVA_TAREA = "fab_nueva_tarea"
 
 /**
+ * Versión "con estado" de la pantalla: obtiene las tareas del ViewModel y le pasa los eventos.
+ *
+ * collectAsStateWithLifecycle convierte el StateFlow en State de Compose y deja de recolectar
+ * cuando la app pasa a segundo plano (onStop), volviendo a hacerlo al regresar.
+ */
+@Composable
+fun TodoRoute(
+    viewModel: TareasViewModel,
+    onAbrirTarea: (Long) -> Unit,
+    onAbrirLeccion: (Leccion) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tareas by viewModel.tareas.collectAsStateWithLifecycle()
+
+    TodoScreen(
+        tareas = tareas,
+        onAgregar = viewModel::agregar,
+        onCompletadaChange = viewModel::cambiarCompletada,
+        onEliminar = viewModel::eliminar,
+        onLimpiarCompletadas = viewModel::limpiarCompletadas,
+        onAbrirTarea = onAbrirTarea,
+        onAbrirLeccion = onAbrirLeccion,
+        modifier = modifier
+    )
+}
+
+/**
  * Pantalla principal de la app de tareas. Estructura típica de una app móvil con Scaffold:
  * - topBar: TopAppBar con el título y acciones.
  * - floatingActionButton: FAB con la acción principal (crear tarea).
  * - contenido: lista de Cards con las tareas.
  *
- * Todo el estado usa rememberSaveable, así que la lista, el formulario abierto y el texto
- * a medio escribir sobreviven a la rotación del dispositivo.
+ * No guarda las tareas: las recibe por parámetro y avisa los cambios con callbacks.
+ * Solo el estado propio de la UI (formulario abierto, texto a medio escribir) vive aquí,
+ * con rememberSaveable para que sobreviva a la rotación.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(
+    tareas: List<Tarea>,
+    onAgregar: (String) -> Unit,
+    onCompletadaChange: (id: Long, completada: Boolean) -> Unit,
+    onEliminar: (id: Long) -> Unit,
+    onLimpiarCompletadas: () -> Unit,
+    onAbrirTarea: (id: Long) -> Unit,
     onAbrirLeccion: (Leccion) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var tareas by rememberSaveable(stateSaver = TareasSaver) { mutableStateOf(tareasDeEjemplo) }
     var mostrarFormulario by rememberSaveable { mutableStateOf(false) }
     var mostrarMenu by remember { mutableStateOf(false) }
     var textoNuevaTarea by rememberSaveable { mutableStateOf("") }
@@ -86,10 +119,8 @@ fun TodoScreen(
     val pendientes = tareas.count { !it.completada }
 
     fun agregarTarea() {
-        val titulo = textoNuevaTarea.trim()
-        if (titulo.isEmpty()) return
-        val nuevoId = (tareas.maxOfOrNull { it.id } ?: 0) + 1
-        tareas = listOf(Tarea(id = nuevoId, titulo = titulo)) + tareas
+        if (textoNuevaTarea.isBlank()) return
+        onAgregar(textoNuevaTarea)
         textoNuevaTarea = ""
         mostrarFormulario = false
     }
@@ -184,12 +215,9 @@ fun TodoScreen(
                 items(tareas, key = { it.id }) { tarea ->
                     TareaCard(
                         tarea = tarea,
-                        onCompletadaChange = { completada ->
-                            tareas = tareas.map {
-                                if (it.id == tarea.id) it.copy(completada = completada) else it
-                            }
-                        },
-                        onEliminar = { tareas = tareas.filterNot { it.id == tarea.id } }
+                        onClick = { onAbrirTarea(tarea.id) },
+                        onCompletadaChange = { completada -> onCompletadaChange(tarea.id, completada) },
+                        onEliminar = { onEliminar(tarea.id) }
                     )
                 }
             }
@@ -197,7 +225,7 @@ fun TodoScreen(
             if (tareas.any { it.completada }) {
                 item(key = "limpiar") {
                     OutlinedButton(
-                        onClick = { tareas = tareas.filterNot { it.completada } },
+                        onClick = onLimpiarCompletadas,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
@@ -259,11 +287,13 @@ private fun NuevaTareaCard(
 @Composable
 private fun TareaCard(
     tarea: Tarea,
+    onClick: () -> Unit,
     onCompletadaChange: (Boolean) -> Unit,
     onEliminar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -329,7 +359,15 @@ private fun EstadoVacio(modifier: Modifier = Modifier) {
 @Composable
 fun TodoScreenPreview() {
     ResumenModulos1y2Theme {
-        TodoScreen(onAbrirLeccion = {})
+        TodoScreen(
+            tareas = tareasDeEjemplo,
+            onAgregar = {},
+            onCompletadaChange = { _, _ -> },
+            onEliminar = {},
+            onLimpiarCompletadas = {},
+            onAbrirTarea = {},
+            onAbrirLeccion = {}
+        )
     }
 }
 
@@ -337,6 +375,14 @@ fun TodoScreenPreview() {
 @Composable
 fun TodoScreenDarkPreview() {
     ResumenModulos1y2Theme(darkTheme = true) {
-        TodoScreen(onAbrirLeccion = {})
+        TodoScreen(
+            tareas = tareasDeEjemplo,
+            onAgregar = {},
+            onCompletadaChange = { _, _ -> },
+            onEliminar = {},
+            onLimpiarCompletadas = {},
+            onAbrirTarea = {},
+            onAbrirLeccion = {}
+        )
     }
 }

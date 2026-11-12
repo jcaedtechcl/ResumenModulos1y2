@@ -12,7 +12,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 import com.example.resumen_modulos1y2.ui.todo.TAG_CAMPO_NUEVA_TAREA
 import com.example.resumen_modulos1y2.ui.todo.TAG_FAB_NUEVA_TAREA
-import com.example.resumen_modulos1y2.ui.todo.TodoScreen
+import com.example.resumen_modulos1y2.ui.todo.TareasViewModel
+import com.example.resumen_modulos1y2.ui.todo.TodoRoute
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,10 +24,15 @@ class TodoScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    // Se crea fuera de setContent: un ViewModel no debe construirse dentro de un composable
+    private val viewModel = TareasViewModel()
+
     @Test
     fun fab_abreFormulario_yAgregarCreaTarea() {
         composeTestRule.setContent {
-            ResumenModulos1y2Theme { TodoScreen(onAbrirLeccion = {}) }
+            ResumenModulos1y2Theme {
+                TodoRoute(viewModel = viewModel, onAbrirTarea = {}, onAbrirLeccion = {})
+            }
         }
 
         composeTestRule.onNodeWithTag(TAG_FAB_NUEVA_TAREA).performClick()
@@ -40,7 +46,9 @@ class TodoScreenTest {
     fun textoAMedioEscribir_sobreviveALaRecreacion() {
         val restorationTester = StateRestorationTester(composeTestRule)
         restorationTester.setContent {
-            ResumenModulos1y2Theme { TodoScreen(onAbrirLeccion = {}) }
+            ResumenModulos1y2Theme {
+                TodoRoute(viewModel = viewModel, onAbrirTarea = {}, onAbrirLeccion = {})
+            }
         }
 
         composeTestRule.onNodeWithTag(TAG_FAB_NUEVA_TAREA).performClick()
