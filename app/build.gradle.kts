@@ -65,6 +65,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    // room-testing (MigrationTestHelper) lee los esquemas JSON con kotlinx-serialization 1.8.1.
+    // Navigation trae 1.7.3 y el APK de pruebas debe usar las mismas versiones que la app,
+    // así que se sube aquí; si no, MigrationTestHelper falla con AbstractMethodError.
+    implementation(libs.kotlinx.serialization.core)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))

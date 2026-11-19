@@ -17,7 +17,9 @@ data class Recordatorio(
     val categoria: String = CATEGORIA_GENERAL,
     val prioridad: Prioridad = Prioridad.Media,
     val completado: Boolean = false,
-    val fecha: LocalDate? = null
+    val fecha: LocalDate? = null,
+    // Se guarda desde la versión 2 de la base; la interfaz todavía no lo usa
+    val archivado: Boolean = false
 )
 
 const val CATEGORIA_GENERAL = "General"

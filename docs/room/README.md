@@ -16,6 +16,7 @@ git checkout m3-room-etapa-2    # deja el proyecto como quedó al final de la et
 | 1 | `m3-room-etapa-1` | La entidad: tabla, columnas, TypeConverter y mapeadores | [etapa-1.md](etapa-1.md) |
 | 2 | `m3-room-etapa-2` | DAO (Flow, `@Upsert`, `UPDATE`, `@Delete`) y `AppDatabase` única | [etapa-2.md](etapa-2.md) |
 | 3 | `m3-room-etapa-3` | Repositorio, ViewModel con `stateIn` y pantalla que se actualiza sola | [etapa-3.md](etapa-3.md) |
+| 4 | `m3-room-etapa-4` | Migración 1 → 2 (`archived`) con `MigrationTestHelper` y evidencia | [etapa-4.md](etapa-4.md) |
 
 ## Punto de partida (decisiones documentadas)
 
@@ -36,6 +37,7 @@ git checkout m3-room-etapa-2    # deja el proyecto como quedó al final de la et
 |---|---|---|
 | Room (`room-runtime`, `room-ktx`, `room-compiler`, `room-testing`) | **2.8.5** | La consigna pide 2.8.4 "o la estable vigente". Al momento de hacer esto, la estable vigente es 2.8.5, una versión de corrección de errores con la misma API. |
 | KSP | **2.3.14** | El proyecto usa AGP 9, que trae Kotlin integrado. Las versiones de KSP con formato `2.2.10-2.0.x` fallan con *"Using kotlin.sourceSets DSL … is not allowed with built-in Kotlin"*; la serie 2.3.x es la que soporta AGP 9. |
+| kotlinx-serialization-core | 1.8.1 | Lo exige `room-testing` (`MigrationTestHelper`); Navigation traía 1.7.3. Ver [etapa-4.md](etapa-4.md). |
 | Plugin `androidx.room` | 2.8.5 | Configura `room { schemaDirectory("$projectDir/schemas") }`: exporta el esquema a `app/schemas/`. |
 
 ## Alcance

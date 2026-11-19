@@ -15,7 +15,8 @@ fun ReminderEntity.toDomain(): Recordatorio = Recordatorio(
     categoria = category,
     prioridad = priority,
     completado = completed,
-    fecha = dueAt?.toLocalDate()
+    fecha = dueAt?.toLocalDate(),
+    archivado = archived
 )
 
 /**
@@ -30,7 +31,8 @@ fun Recordatorio.toEntity(updatedAt: Long): ReminderEntity = ReminderEntity(
     priority = prioridad,
     completed = completado,
     dueAt = fecha?.toEpochMillis(),
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    archived = archivado
 )
 
 // La fecha se guarda como milisegundos del inicio del día en UTC. Usar UTC en ambos sentidos

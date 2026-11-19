@@ -27,5 +27,7 @@ data class ReminderEntity(
     val completed: Boolean,
     // En SQL se usa snake_case; @ColumnInfo separa el nombre de Kotlin del nombre de la columna
     @ColumnInfo(name = "due_at") val dueAt: Long?,
-    @ColumnInfo(name = "updated_at") val updatedAt: Long
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    // Versión 2. defaultValue debe coincidir con el DEFAULT de MIGRATION_1_2
+    @ColumnInfo(name = "archived", defaultValue = "0") val archived: Boolean = false
 )

@@ -7,14 +7,15 @@ import androidx.room.TypeConverters
 /**
  * La base de datos: declara sus tablas (entities), su versión y los converters que usa.
  *
- * - `version`: se sube cada vez que cambia el esquema (etapa 4).
+ * - `version`: se sube cada vez que cambia el esquema. Versión 2: columna `archived`
+ *   (ver MIGRATION_1_2 en Migrations.kt).
  * - `exportSchema = true`: Room escribe el esquema de cada versión en app/schemas/. Ese JSON se
  *   sube al repositorio: documenta la base y permite probar migraciones.
  *
  * Abrir una base es costoso y dos instancias sobre el mismo archivo pueden pisarse, así que se
  * crea UNA sola vez, en AppContainer.
  */
-@Database(entities = [ReminderEntity::class], version = 1, exportSchema = true)
+@Database(entities = [ReminderEntity::class], version = 2, exportSchema = true)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
