@@ -57,3 +57,7 @@ en clase: `git log --oneline` y `git checkout <commit>`.
 | 3 | Escribir con `edit` (funciones `suspend`, transacciones atómicas) | [etapa-3.md](etapa-3.md) |
 | 4 | `SettingsViewModel` + pantalla de Configuración (flujo unidireccional) | [etapa-4.md](etapa-4.md) |
 | 5 | Aplicar las preferencias: tema global y `combine` en el listado (+ evidencia) | [etapa-5.md](etapa-5.md) |
+
+## Siguiente tópico
+
+La persistencia de los recordatorios con Room está en [room/README.md](room/README.md).

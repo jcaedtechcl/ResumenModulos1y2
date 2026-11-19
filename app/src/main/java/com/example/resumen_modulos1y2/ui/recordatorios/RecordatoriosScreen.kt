@@ -58,7 +58,7 @@ fun RecordatoriosRoute(
 @Composable
 fun RecordatoriosScreen(
     recordatorios: List<Recordatorio>,
-    onCompletadoChange: (id: Long, completado: Boolean) -> Unit,
+    onCompletadoChange: (id: String, completado: Boolean) -> Unit,
     onVolver: () -> Unit,
     onAbrirConfiguracion: () -> Unit,
     modifier: Modifier = Modifier
@@ -124,7 +124,11 @@ private fun FilaRecordatorio(
         },
         supportingContent = {
             Text(
-                text = recordatorio.fecha.format(formatoFecha),
+                text = stringResource(
+                    R.string.recordatorio_detalle,
+                    recordatorio.fecha?.format(formatoFecha) ?: stringResource(R.string.recordatorio_sin_fecha),
+                    recordatorio.categoria
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },

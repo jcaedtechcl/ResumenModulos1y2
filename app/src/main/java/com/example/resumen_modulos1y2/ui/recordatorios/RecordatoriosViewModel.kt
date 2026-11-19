@@ -35,7 +35,7 @@ class RecordatoriosViewModel(repository: UserPreferencesRepository) : ViewModel(
             initialValue = emptyList()
         )
 
-    fun cambiarCompletado(id: Long, completado: Boolean) {
+    fun cambiarCompletado(id: String, completado: Boolean) {
         _recordatorios.update { lista ->
             lista.map { if (it.id == id) it.copy(completado = completado) else it }
         }

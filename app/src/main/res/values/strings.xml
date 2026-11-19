@@ -5,6 +5,8 @@
     <string name="recordatorios_titulo">Recordatorios</string>
     <string name="recordatorios_vacio">No hay recordatorios para mostrar</string>
     <string name="recordatorio_marcar">Marcar \"%1$s\" como completado</string>
+    <string name="recordatorio_detalle">%1$s · %2$s</string>
+    <string name="recordatorio_sin_fecha">Sin fecha</string>
     <string name="abrir_configuracion">Abrir configuración</string>
 
     <!-- Módulo 3: Configuración -->
