@@ -1,6 +1,8 @@
 package com.example.resumen_modulos1y2.di
 
 import android.content.Context
+import androidx.room.Room
+import com.example.resumen_modulos1y2.data.local.AppDatabase
 import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
 
@@ -19,5 +21,11 @@ class AppContainer(context: Context) {
     // El DataStore ya no se expone: desde esta etapa se accede solo a través del repositorio
     val userPreferencesRepository: UserPreferencesRepository by lazy {
         UserPreferencesRepository(appContext.userPreferencesDataStore)
+    }
+
+    // Única instancia de la base de datos. `lazy` la abre recién cuando alguien la pide, no al
+    // arrancar la app.
+    val appDatabase: AppDatabase by lazy {
+        Room.databaseBuilder(appContext, AppDatabase::class.java, AppDatabase.NOMBRE_ARCHIVO).build()
     }
 }
