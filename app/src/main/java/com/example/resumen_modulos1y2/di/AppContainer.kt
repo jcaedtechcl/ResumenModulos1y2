@@ -6,6 +6,7 @@ import com.example.resumen_modulos1y2.BuildConfig
 import com.example.resumen_modulos1y2.data.ReminderRepository
 import com.example.resumen_modulos1y2.data.local.AppDatabase
 import com.example.resumen_modulos1y2.data.local.MIGRATION_1_2
+import com.example.resumen_modulos1y2.data.local.MIGRATION_2_3
 import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
 import com.example.resumen_modulos1y2.iss.data.IssRepository
@@ -42,7 +43,7 @@ class AppContainer(context: Context) {
             // la base y la crearía vacía. Los recordatorios del usuario se perderían en silencio
             // al actualizar la app. Sin ese "plan B", una migración faltante es un error visible
             // durante el desarrollo, que es cuando se debe descubrir.
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
     }
 
@@ -81,5 +82,6 @@ class AppContainer(context: Context) {
 
     private val issApiService: IssApiService by lazy { retrofit.create(IssApiService::class.java) }
 
-    val issRepository: IssRepository by lazy { IssRepository(issApiService) }
+    // La red escribe en Room y la pantalla lee de Room (ver IssRepository)
+    val issRepository: IssRepository by lazy { IssRepository(issApiService, appDatabase.issPositionDao()) }
 }

@@ -8,16 +8,22 @@ import com.example.resumen_modulos1y2.appContainer
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.RemoteResult
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Tiempo mínimo entre consultas exitosas. La API admite ≈1 por segundo; aquí se pide 10 veces menos. */
 const val INTERVALO_MINIMO_MS = 10_000L
 
 /**
- * ETAPA 2: el ViewModel recibe RemoteResult y lo convierte en IssUiState. Ya no hay try/catch:
- * las excepciones se quedaron en la capa de datos (safeApiCall).
+ * ETAPA 3: el ViewModel ya no guarda la posición. La pantalla se arma combinando:
+ * - lo que hay en Room (`repository.latest` y `repository.history`), y
+ * - el error de la última consulta, si hubo.
+ *
+ * `consultar()` solo PIDE una actualización. Si funciona, Room emite la fila nueva y la pantalla
+ * cambia sola; el ViewModel nunca recibe la posición desde la red.
  *
  * `reloj` se recibe como parámetro para que la prueba pueda "adelantar" el tiempo.
  */
@@ -26,8 +32,15 @@ class IssViewModel(
     private val reloj: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<IssUiState>(IssUiState.Loading)
-    val uiState: StateFlow<IssUiState> = _uiState.asStateFlow()
+    private val ultimoError = MutableStateFlow<IssUiState.Error?>(null)
+
+    val uiState: StateFlow<IssUiState> =
+        combine(repository.latest, repository.history, ultimoError, ::construirUiState)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = IssUiState.Loading
+            )
 
     private var consultando = false
     private var ultimoExito: Long? = null
@@ -47,15 +60,13 @@ class IssViewModel(
         if (ultimo != null && reloj() - ultimo < INTERVALO_MINIMO_MS) return
 
         consultando = true
-        _uiState.value = IssUiState.Loading
         viewModelScope.launch {
-            val resultado = repository.fetchPosition()
-            _uiState.value = when (resultado) {
+            when (val resultado = repository.refresh()) {
                 is RemoteResult.Success -> {
                     ultimoExito = reloj()
-                    IssUiState.Content(resultado.data)
+                    ultimoError.value = null
                 }
-                else -> resultado.aError()
+                else -> ultimoError.value = resultado.aError()
             }
             consultando = false
         }

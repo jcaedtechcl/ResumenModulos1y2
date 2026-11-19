@@ -70,8 +70,9 @@ class MigrationTest {
         }
 
         val context = ApplicationProvider.getApplicationContext<Context>()
+        // Como en la app: todas las migraciones, en cadena (1→2→3)
         val database = Room.databaseBuilder(context, AppDatabase::class.java, nombreBase)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
         try {
             val leido = database.reminderDao().observeAll().first().single()
@@ -80,6 +81,29 @@ class MigrationTest {
             assertFalse(leido.archived)
         } finally {
             database.close()
+        }
+    }
+
+    /** M3 ISS: 2→3 agrega `iss_positions` sin tocar los recordatorios. */
+    @Test
+    fun migrar2a3_agregaLaTablaIssYConservaLosRecordatorios() {
+        helper.createDatabase(nombreBase, 2).use { db ->
+            db.execSQL(
+                "INSERT INTO reminders (id, title, description, category, priority, completed, due_at, updated_at, archived) " +
+                    "VALUES ('uuid-1', 'Pagar la luz', NULL, 'Hogar', 'Alta', 0, NULL, 111, 0)"
+            )
+        }
+
+        helper.runMigrationsAndValidate(nombreBase, 3, true, MIGRATION_2_3).use { db ->
+            db.query("SELECT title FROM reminders").use { cursor ->
+                assertEquals(1, cursor.count)
+                cursor.moveToFirst()
+                assertEquals("Pagar la luz", cursor.getString(0))
+            }
+            db.query("SELECT COUNT(*) FROM iss_positions").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("la tabla nueva empieza vacía", 0, cursor.getInt(0))
+            }
         }
     }
 }

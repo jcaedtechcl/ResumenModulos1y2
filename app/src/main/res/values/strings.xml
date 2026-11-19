@@ -64,4 +64,23 @@
     <string name="iss_visibilidad_eclipse">En la sombra de la Tierra</string>
     <string name="iss_visibilidad_desconocida">Desconocida</string>
     <string name="iss_ver_mapa">Ver en el mapa</string>
+    <string name="iss_vacio">Aún no hay posiciones guardadas. Toca \"Consultar\" para obtener la primera.</string>
+    <string name="iss_historial">Historial reciente</string>
+    <string name="iss_historial_fila">Lat. %1$s · Lon. %2$s</string>
+    <string name="iss_hace_instantes">Medida hace instantes</string>
+    <plurals name="iss_hace_minutos">
+        <item quantity="one">Medida hace %1$d min</item>
+        <item quantity="many">Medida hace %1$d min</item>
+        <item quantity="other">Medida hace %1$d min</item>
+    </plurals>
+    <plurals name="iss_hace_horas">
+        <item quantity="one">Medida hace %1$d hora</item>
+        <item quantity="many">Medida hace %1$d horas</item>
+        <item quantity="other">Medida hace %1$d horas</item>
+    </plurals>
+    <plurals name="iss_hace_dias">
+        <item quantity="one">Medida hace %1$d día</item>
+        <item quantity="many">Medida hace %1$d días</item>
+        <item quantity="other">Medida hace %1$d días</item>
+    </plurals>
 </resources>

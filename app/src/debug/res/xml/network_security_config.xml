@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SOLO en debug (src/debug): permite HTTP sin cifrar hacia localhost, que es donde escucha
+    MockWebServer en las pruebas instrumentadas (IssRepositoryTest).
+
+    No se usa android:usesCleartextTraffic="true": eso abriría HTTP para TODOS los dominios.
+    Aquí la excepción es solo para dos nombres locales, y el APK de release no la incluye.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

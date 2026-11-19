@@ -3,23 +3,28 @@ package com.example.resumen_modulos1y2.iss.ui
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +35,7 @@ import com.example.resumen_modulos1y2.iss.domain.IssPosition
 import com.example.resumen_modulos1y2.iss.domain.Visibilidad
 import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -39,7 +45,7 @@ private val formatoHora = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneI
 
 /**
  * Versión con estado: obtiene el ViewModel y observa su StateFlow. No importa nada de Retrofit,
- * OkHttp, Room ni WorkManager: solo conoce el modelo de dominio IssPosition.
+ * OkHttp, Room ni WorkManager: solo conoce IssUiState y el modelo de dominio IssPosition.
  */
 @Composable
 fun IssRoute(
@@ -57,31 +63,40 @@ fun IssScreen(
     uiState: IssUiState,
     onConsultar: () -> Unit,
     onVolver: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ahora: Instant = relojDePantalla()
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = { BarraLeccion(titulo = stringResource(R.string.iss_titulo), onVolver = onVolver) }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             when (uiState) {
-                IssUiState.Loading -> CircularProgressIndicator()
-                is IssUiState.Content -> {
-                    TarjetaPosicion(uiState.position)
-                    Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) }
+                IssUiState.Loading -> item { CircularProgressIndicator() }
+                IssUiState.Empty -> item {
+                    // Vacío NO es error: no falló nada, simplemente aún no hay datos
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.iss_vacio))
+                        Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) }
+                    }
                 }
-                is IssUiState.Error -> {
-                    Text(stringResource(uiState.mensaje), color = MaterialTheme.colorScheme.error)
-                    // Reintentar solo si tiene sentido: ante un 404 o datos inválidos, insistir no sirve
-                    if (uiState.puedeReintentar) {
-                        Button(onClick = onConsultar) { Text(stringResource(R.string.iss_reintentar)) }
+                is IssUiState.Error -> item { MensajeError(uiState, onReintentar = onConsultar) }
+                is IssUiState.Content -> {
+                    // Con datos guardados, un error se muestra ARRIBA de los datos, sin ocultarlos
+                    uiState.error?.let { item { MensajeError(it, onReintentar = null) } }
+                    item { TarjetaPosicion(uiState.position, ahora) }
+                    item { Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) } }
+                    item {
+                        Text(stringResource(R.string.iss_historial), style = MaterialTheme.typography.titleMedium)
+                    }
+                    // Clave estable (el instante de la medición): al llegar una fila nueva, las demás no se confunden
+                    items(uiState.history, key = { it.medidaEn.epochSecond }) { posicion ->
+                        FilaHistorial(posicion)
+                        HorizontalDivider()
                     }
                 }
             }
@@ -89,11 +104,38 @@ fun IssScreen(
     }
 }
 
+/**
+ * La hora "de la pantalla", para que "hace 3 min" avance solo. Se actualiza cada 30 s mientras
+ * el composable está en pantalla. Es un reloj de interfaz: no hace solicitudes de red.
+ */
 @Composable
-internal fun TarjetaPosicion(posicion: IssPosition, modifier: Modifier = Modifier) {
+private fun relojDePantalla(): Instant {
+    val ahora by produceState(Instant.now()) {
+        while (true) {
+            delay(30_000)
+            value = Instant.now()
+        }
+    }
+    return ahora
+}
+
+@Composable
+private fun MensajeError(error: IssUiState.Error, onReintentar: (() -> Unit)?) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(error.mensaje), color = MaterialTheme.colorScheme.error)
+        // Reintentar solo si tiene sentido: ante un 404 o datos inválidos, insistir no sirve
+        if (onReintentar != null && error.puedeReintentar) {
+            Button(onClick = onReintentar) { Text(stringResource(R.string.iss_reintentar)) }
+        }
+    }
+}
+
+@Composable
+internal fun TarjetaPosicion(posicion: IssPosition, ahora: Instant, modifier: Modifier = Modifier) {
     val uriHandler = LocalUriHandler.current
     Card(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(textoAntiguedad(antiguedad(posicion.medidaEn, ahora)), style = MaterialTheme.typography.titleMedium)
             Dato(R.string.iss_latitud, stringResource(R.string.iss_grados, posicion.latitude))
             Dato(R.string.iss_longitud, stringResource(R.string.iss_grados, posicion.longitude))
             Dato(R.string.iss_altitud, stringResource(R.string.iss_km, posicion.altitudeKm))
@@ -107,6 +149,30 @@ internal fun TarjetaPosicion(posicion: IssPosition, modifier: Modifier = Modifie
             }) { Text(stringResource(R.string.iss_ver_mapa)) }
         }
     }
+}
+
+@Composable
+private fun FilaHistorial(posicion: IssPosition) {
+    ListItem(
+        headlineContent = { Text(formatoHora.format(posicion.medidaEn)) },
+        supportingContent = {
+            Text(
+                stringResource(
+                    R.string.iss_historial_fila,
+                    stringResource(R.string.iss_grados, posicion.latitude),
+                    stringResource(R.string.iss_grados, posicion.longitude)
+                )
+            )
+        }
+    )
+}
+
+@Composable
+private fun textoAntiguedad(antiguedad: Antiguedad): String = when (antiguedad) {
+    Antiguedad.RecienMedida -> stringResource(R.string.iss_hace_instantes)
+    is Antiguedad.Minutos -> pluralStringResource(R.plurals.iss_hace_minutos, antiguedad.cantidad.toInt(), antiguedad.cantidad)
+    is Antiguedad.Horas -> pluralStringResource(R.plurals.iss_hace_horas, antiguedad.cantidad.toInt(), antiguedad.cantidad)
+    is Antiguedad.Dias -> pluralStringResource(R.plurals.iss_hace_dias, antiguedad.cantidad.toInt(), antiguedad.cantidad)
 }
 
 @Composable
@@ -141,6 +207,15 @@ internal val posicionDeEjemplo = IssPosition(
 @Composable
 private fun IssScreenPreview() {
     ResumenModulos1y2Theme {
-        IssScreen(uiState = IssUiState.Content(posicionDeEjemplo), onConsultar = {}, onVolver = {})
+        IssScreen(
+            uiState = IssUiState.Content(
+                position = posicionDeEjemplo,
+                history = listOf(posicionDeEjemplo),
+                error = IssUiState.Error(R.string.iss_error_sin_conexion, puedeReintentar = true)
+            ),
+            onConsultar = {},
+            onVolver = {},
+            ahora = posicionDeEjemplo.medidaEn.plusSeconds(180)
+        )
     }
 }
