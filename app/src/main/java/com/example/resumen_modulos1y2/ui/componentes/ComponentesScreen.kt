@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.resumen_modulos1y2.model.Prioridad
 import com.example.resumen_modulos1y2.ui.Leccion
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 

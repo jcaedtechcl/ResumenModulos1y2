@@ -33,7 +33,7 @@ import com.example.resumen_modulos1y2.ui.Leccion
 import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
 import com.example.resumen_modulos1y2.ui.componentes.ChipPrioridad
 import com.example.resumen_modulos1y2.ui.componentes.Codigo
-import com.example.resumen_modulos1y2.ui.componentes.Prioridad
+import com.example.resumen_modulos1y2.model.Prioridad
 import com.example.resumen_modulos1y2.ui.componentes.SeccionCard
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 

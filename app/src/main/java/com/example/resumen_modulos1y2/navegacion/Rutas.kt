@@ -20,6 +20,9 @@ import kotlinx.serialization.Serializable
 @Serializable object RutaFlow
 @Serializable object RutaNavegacion
 
+// Módulo 3: Recordatorios con preferencias persistentes
+@Serializable object RutaRecordatorios
+
 // Grafo anidado: asistente de nueva tarea en dos pasos
 @Serializable object GrafoNuevaTarea
 @Serializable object RutaPasoTitulo
@@ -33,4 +36,5 @@ fun Leccion.ruta(): Any = when (this) {
     Leccion.Listas -> RutaListas
     Leccion.Flow -> RutaFlow
     Leccion.Navegacion -> RutaNavegacion
+    Leccion.Recordatorios -> RutaRecordatorios
 }

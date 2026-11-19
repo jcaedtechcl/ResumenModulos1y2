@@ -17,11 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.resumen_modulos1y2.model.Prioridad
 
 // Piezas reutilizables de una tarea, de la más pequeña a la más grande:
 // ChipPrioridad + TextoVencimiento  →  TareaDetalleCard  →  pantallas.
-
-enum class Prioridad(val texto: String) { Alta("Alta"), Media("Media"), Baja("Baja") }
 
 data class TareaDetalle(
     val id: Int,

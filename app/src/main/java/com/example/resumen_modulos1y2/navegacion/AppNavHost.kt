@@ -21,6 +21,7 @@ import com.example.resumen_modulos1y2.ui.listas.ListasScreen
 import com.example.resumen_modulos1y2.ui.navegacion.NavegacionScreen
 import com.example.resumen_modulos1y2.ui.navegacion.PasoConfirmarScreen
 import com.example.resumen_modulos1y2.ui.navegacion.PasoTituloScreen
+import com.example.resumen_modulos1y2.ui.recordatorios.RecordatoriosRoute
 import com.example.resumen_modulos1y2.ui.todo.DetalleTareaRoute
 import com.example.resumen_modulos1y2.ui.todo.TareasViewModel
 import com.example.resumen_modulos1y2.ui.todo.TodoRoute
@@ -92,6 +93,8 @@ fun AppNavHost(
                 onVolver = volver
             )
         }
+
+        composable<RutaRecordatorios> { RecordatoriosRoute(onVolver = volver) }
 
         // Subgrafo anidado: se entra con navigate(GrafoNuevaTarea) y empieza en RutaPasoTitulo
         navigation<GrafoNuevaTarea>(startDestination = RutaPasoTitulo) {

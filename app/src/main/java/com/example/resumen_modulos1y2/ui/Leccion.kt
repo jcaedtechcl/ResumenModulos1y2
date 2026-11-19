@@ -8,5 +8,6 @@ enum class Leccion(val titulo: String) {
     Estado("Estado y recomposición"),
     Listas("Listas con claves estables"),
     Flow("Flow y StateFlow"),
-    Navegacion("Navigation Compose")
+    Navegacion("Navigation Compose"),
+    Recordatorios("Recordatorios · DataStore")
 }

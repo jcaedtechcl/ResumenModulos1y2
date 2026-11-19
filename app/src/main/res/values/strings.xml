@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Resumen-Modulos1y2</string>
+
+    <!-- Módulo 3: Recordatorios -->
+    <string name="recordatorios_titulo">Recordatorios</string>
+    <string name="recordatorios_vacio">No hay recordatorios para mostrar</string>
+    <string name="recordatorio_marcar">Marcar \"%1$s\" como completado</string>
 </resources>
