@@ -18,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -48,13 +47,14 @@ fun IssRoute(
     modifier: Modifier = Modifier,
     viewModel: IssViewModel = viewModel(factory = IssViewModel.Factory)
 ) {
-    val estado by viewModel.estado.collectAsStateWithLifecycle()
-    IssScreen(estado = estado, onConsultar = viewModel::consultar, onVolver = onVolver, modifier = modifier)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    IssScreen(uiState = uiState, onConsultar = viewModel::consultar, onVolver = onVolver, modifier = modifier)
 }
 
+/** Versión sin estado: un `when` exhaustivo sobre IssUiState decide qué se dibuja. */
 @Composable
 fun IssScreen(
-    estado: ConsultaIss,
+    uiState: IssUiState,
     onConsultar: () -> Unit,
     onVolver: () -> Unit,
     modifier: Modifier = Modifier
@@ -71,16 +71,19 @@ fun IssScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            estado.posicion?.let { TarjetaPosicion(it) }
-                ?: Text(stringResource(R.string.iss_sin_datos))
-            estado.error?.let {
-                Text(stringResource(R.string.iss_error_tecnico, it), color = MaterialTheme.colorScheme.error)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(onClick = onConsultar, enabled = !estado.cargando) {
-                    Text(stringResource(R.string.iss_consultar))
+            when (uiState) {
+                IssUiState.Loading -> CircularProgressIndicator()
+                is IssUiState.Content -> {
+                    TarjetaPosicion(uiState.position)
+                    Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) }
                 }
-                if (estado.cargando) CircularProgressIndicator()
+                is IssUiState.Error -> {
+                    Text(stringResource(uiState.mensaje), color = MaterialTheme.colorScheme.error)
+                    // Reintentar solo si tiene sentido: ante un 404 o datos inválidos, insistir no sirve
+                    if (uiState.puedeReintentar) {
+                        Button(onClick = onConsultar) { Text(stringResource(R.string.iss_reintentar)) }
+                    }
+                }
             }
         }
     }
@@ -138,6 +141,6 @@ internal val posicionDeEjemplo = IssPosition(
 @Composable
 private fun IssScreenPreview() {
     ResumenModulos1y2Theme {
-        IssScreen(estado = ConsultaIss(posicion = posicionDeEjemplo), onConsultar = {}, onVolver = {})
+        IssScreen(uiState = IssUiState.Content(posicionDeEjemplo), onConsultar = {}, onVolver = {})
     }
 }
