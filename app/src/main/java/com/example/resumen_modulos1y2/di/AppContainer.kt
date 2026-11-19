@@ -1,8 +1,7 @@
 package com.example.resumen_modulos1y2.di
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
+import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
 
 /**
@@ -17,5 +16,8 @@ class AppContainer(context: Context) {
 
     private val appContext = context.applicationContext
 
-    val userPreferencesDataStore: DataStore<Preferences> = appContext.userPreferencesDataStore
+    // El DataStore ya no se expone: desde esta etapa se accede solo a través del repositorio
+    val userPreferencesRepository: UserPreferencesRepository by lazy {
+        UserPreferencesRepository(appContext.userPreferencesDataStore)
+    }
 }
