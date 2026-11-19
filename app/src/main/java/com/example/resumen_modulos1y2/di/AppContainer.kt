@@ -9,6 +9,8 @@ import com.example.resumen_modulos1y2.data.local.MIGRATION_1_2
 import com.example.resumen_modulos1y2.data.local.MIGRATION_2_3
 import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
+import com.example.resumen_modulos1y2.iss.data.AndroidConnectivityObserver
+import com.example.resumen_modulos1y2.iss.data.ConnectivityObserver
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.IssApiService
 import com.example.resumen_modulos1y2.iss.data.remote.agregarRegistroDeRed
@@ -84,4 +86,6 @@ class AppContainer(context: Context) {
 
     // La red escribe en Room y la pantalla lee de Room (ver IssRepository)
     val issRepository: IssRepository by lazy { IssRepository(issApiService, appDatabase.issPositionDao()) }
+
+    val connectivityObserver: ConnectivityObserver by lazy { AndroidConnectivityObserver(appContext) }
 }

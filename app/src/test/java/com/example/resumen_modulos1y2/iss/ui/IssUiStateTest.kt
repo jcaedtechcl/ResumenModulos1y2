@@ -29,7 +29,7 @@ class IssUiStateTest {
     fun vacioYErrorSonEstadosDistintos() {
         val error = IssUiState.Error(R.string.iss_error_sin_conexion, puedeReintentar = true)
 
-        assertEquals(IssUiState.Empty, construirUiState(latest = null, history = emptyList(), ultimoError = null))
+        assertEquals(IssUiState.Empty(), construirUiState(latest = null, history = emptyList(), ultimoError = null))
         assertEquals(error, construirUiState(latest = null, history = emptyList(), ultimoError = error))
     }
 
@@ -39,8 +39,19 @@ class IssUiStateTest {
         val error = IssUiState.Error(R.string.iss_error_sin_conexion, puedeReintentar = true)
 
         assertEquals(
-            IssUiState.Content(posicion, listOf(posicion), error),
+            IssUiState.Content(posicion, listOf(posicion), aviso = R.string.iss_error_sin_conexion),
             construirUiState(latest = posicion, history = listOf(posicion), ultimoError = error)
+        )
+    }
+
+    @Test
+    fun sinConexion_elBannerReemplazaAlAviso_yLosDatosSiguen() {
+        val posicion = IssPosition(1.0, 2.0, 420.0, 27_600.0, Visibilidad.ECLIPSE, medida)
+        val error = IssUiState.Error(R.string.iss_error_sin_conexion, puedeReintentar = true)
+
+        assertEquals(
+            IssUiState.Content(posicion, listOf(posicion), aviso = null, sinConexion = true),
+            construirUiState(posicion, listOf(posicion), error, enLinea = false)
         )
     }
 }

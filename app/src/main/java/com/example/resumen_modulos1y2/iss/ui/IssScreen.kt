@@ -14,12 +14,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
@@ -28,7 +31,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.resumen_modulos1y2.R
 import com.example.resumen_modulos1y2.iss.domain.IssPosition
@@ -54,6 +60,17 @@ fun IssRoute(
     viewModel: IssViewModel = viewModel(factory = IssViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Bucle de actualización atado al ciclo de vida: repeatOnLifecycle(STARTED) ejecuta el bloque
+    // al quedar visible y lo CANCELA en onStop (segundo plano, pantalla apagada). Al salir de la
+    // pantalla, LaunchedEffect también se cancela. Así nunca hay solicitudes "huérfanas".
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(viewModel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.actualizarMientrasVisible()
+        }
+    }
+
     IssScreen(uiState = uiState, onConsultar = viewModel::consultar, onVolver = onVolver, modifier = modifier)
 }
 
@@ -70,37 +87,72 @@ fun IssScreen(
         modifier = modifier.fillMaxSize(),
         topBar = { BarraLeccion(titulo = stringResource(R.string.iss_titulo), onVolver = onVolver) }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            when (uiState) {
-                IssUiState.Loading -> item { CircularProgressIndicator() }
-                IssUiState.Empty -> item {
-                    // Vacío NO es error: no falló nada, simplemente aún no hay datos
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.iss_vacio))
-                        Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) }
+        Column(Modifier.fillMaxSize().padding(innerPadding)) {
+            // Indicador fino arriba: avisa que se está actualizando SIN tapar los datos
+            if (uiState.actualizando) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (uiState.sinConexion) BannerSinConexion(hayDatos = uiState is IssUiState.Content)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                when (uiState) {
+                    IssUiState.Loading -> item { CircularProgressIndicator() }
+                    is IssUiState.Empty -> item {
+                        // Vacío NO es error: no falló nada, simplemente aún no hay datos
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.iss_vacio))
+                            Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) }
+                        }
                     }
-                }
-                is IssUiState.Error -> item { MensajeError(uiState, onReintentar = onConsultar) }
-                is IssUiState.Content -> {
-                    // Con datos guardados, un error se muestra ARRIBA de los datos, sin ocultarlos
-                    uiState.error?.let { item { MensajeError(it, onReintentar = null) } }
-                    item { TarjetaPosicion(uiState.position, ahora) }
-                    item { Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) } }
-                    item {
-                        Text(stringResource(R.string.iss_historial), style = MaterialTheme.typography.titleMedium)
-                    }
-                    // Clave estable (el instante de la medición): al llegar una fila nueva, las demás no se confunden
-                    items(uiState.history, key = { it.medidaEn.epochSecond }) { posicion ->
-                        FilaHistorial(posicion)
-                        HorizontalDivider()
+                    is IssUiState.Error -> item { MensajeError(uiState, onReintentar = onConsultar) }
+                    is IssUiState.Content -> {
+                        // Con datos guardados, un error se muestra ARRIBA de los datos, sin ocultarlos
+                        uiState.aviso?.let { aviso ->
+                            item { Text(stringResource(aviso), color = MaterialTheme.colorScheme.error) }
+                        }
+                        item { TarjetaPosicion(uiState.position, ahora) }
+                        item { Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) } }
+                        item {
+                            Text(stringResource(R.string.iss_historial), style = MaterialTheme.typography.titleMedium)
+                        }
+                        // Clave estable (el instante de la medición): al llegar una fila nueva, las demás no se confunden
+                        items(uiState.history, key = { it.medidaEn.epochSecond }) { posicion ->
+                            FilaHistorial(posicion)
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+private val IssUiState.actualizando: Boolean
+    get() = when (this) {
+        IssUiState.Loading -> false
+        is IssUiState.Empty -> actualizando
+        is IssUiState.Content -> actualizando
+        is IssUiState.Error -> actualizando
+    }
+
+private val IssUiState.sinConexion: Boolean
+    get() = when (this) {
+        IssUiState.Loading -> false
+        is IssUiState.Empty -> sinConexion
+        is IssUiState.Content -> sinConexion
+        is IssUiState.Error -> sinConexion
+    }
+
+/** Aparece y desaparece solo, según la conectividad. No reemplaza los datos: va encima. */
+@Composable
+private fun BannerSinConexion(hayDatos: Boolean) {
+    Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(if (hayDatos) R.string.iss_banner_sin_conexion else R.string.iss_banner_sin_conexion_sin_datos),
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 
@@ -211,7 +263,7 @@ private fun IssScreenPreview() {
             uiState = IssUiState.Content(
                 position = posicionDeEjemplo,
                 history = listOf(posicionDeEjemplo),
-                error = IssUiState.Error(R.string.iss_error_sin_conexion, puedeReintentar = true)
+                sinConexion = true
             ),
             onConsultar = {},
             onVolver = {},

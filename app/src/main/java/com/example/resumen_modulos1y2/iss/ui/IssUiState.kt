@@ -11,35 +11,64 @@ import java.time.Instant
  * Lo único que la pantalla necesita saber. Es `sealed`, así que la pantalla resuelve un `when`
  * y nunca recibe una excepción ni un código HTTP.
  *
- * Desde la etapa 3, "vacío" y "error" son estados distintos:
+ * "Vacío" y "error" son estados distintos:
  * - Empty: la base no tiene posiciones y nada falló (por ejemplo, la primera consulta va en camino).
  * - Error: la base no tiene posiciones Y la última consulta falló. No hay nada que mostrar.
- * - Content: hay al menos una posición guardada. Si además la última consulta falló, el error
- *   viaja en `error` y se muestra JUNTO a los datos, sin reemplazarlos.
+ * - Content: hay al menos una posición guardada. Si además la última consulta falló, el mensaje
+ *   viaja en `aviso` y se muestra JUNTO a los datos, sin reemplazarlos.
+ *
+ * Desde la etapa 4, cada estado con datos o mensaje lleva también `sinConexion` (para el banner)
+ * y `actualizando` (para el indicador de progreso).
  */
 sealed interface IssUiState {
     /** Todavía no llega la primera lectura de Room (dura milisegundos). */
     data object Loading : IssUiState
 
-    data object Empty : IssUiState
+    data class Empty(
+        val sinConexion: Boolean = false,
+        val actualizando: Boolean = false
+    ) : IssUiState
 
     data class Content(
         val position: IssPosition,
         val history: List<IssPosition>,
-        val error: Error? = null
+        @StringRes val aviso: Int? = null,
+        val sinConexion: Boolean = false,
+        val actualizando: Boolean = false
     ) : IssUiState
 
     /** `mensaje` es un recurso de strings.xml: la pantalla lo traduce con stringResource(). */
-    data class Error(@StringRes val mensaje: Int, val puedeReintentar: Boolean) : IssUiState
+    data class Error(
+        @StringRes val mensaje: Int,
+        val puedeReintentar: Boolean,
+        val sinConexion: Boolean = false,
+        val actualizando: Boolean = false
+    ) : IssUiState
 }
 
-/** Combina lo que hay en Room con el resultado de la última consulta. Función pura. */
-fun construirUiState(latest: IssPosition?, history: List<IssPosition>, ultimoError: IssUiState.Error?): IssUiState =
-    when {
-        latest != null -> IssUiState.Content(latest, history, ultimoError)
-        ultimoError != null -> ultimoError
-        else -> IssUiState.Empty
-    }
+/**
+ * Combina todo en UN estado. Función pura: mismas entradas, mismo resultado, y se prueba sin
+ * Android ni coroutines.
+ *
+ * Sin conexión, el aviso de error se omite: el banner ya explica por qué no hay datos nuevos.
+ */
+fun construirUiState(
+    latest: IssPosition?,
+    history: List<IssPosition>,
+    ultimoError: IssUiState.Error?,
+    enLinea: Boolean = true,
+    actualizando: Boolean = false
+): IssUiState = when {
+    latest != null -> IssUiState.Content(
+        position = latest,
+        history = history,
+        aviso = ultimoError?.mensaje.takeIf { enLinea },
+        sinConexion = !enLinea,
+        actualizando = actualizando
+    )
+    ultimoError != null -> ultimoError.copy(sinConexion = !enLinea, actualizando = actualizando)
+    else -> IssUiState.Empty(sinConexion = !enLinea, actualizando = actualizando)
+}
 
 /**
  * Traduce un fallo técnico a algo que el usuario entiende y decide si tiene sentido reintentar.

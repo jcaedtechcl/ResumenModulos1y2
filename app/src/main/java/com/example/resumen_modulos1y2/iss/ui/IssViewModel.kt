@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.resumen_modulos1y2.appContainer
+import com.example.resumen_modulos1y2.iss.data.ConnectivityObserver
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.RemoteResult
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -18,63 +22,96 @@ import kotlinx.coroutines.launch
 const val INTERVALO_MINIMO_MS = 10_000L
 
 /**
- * ETAPA 3: el ViewModel ya no guarda la posición. La pantalla se arma combinando:
- * - lo que hay en Room (`repository.latest` y `repository.history`), y
- * - el error de la última consulta, si hubo.
+ * El ViewModel no guarda la posición. La pantalla se arma combinando:
+ * - lo que hay en Room (`repository.latest` y `repository.history`);
+ * - el error de la última consulta, si hubo;
+ * - si hay red (`connectivity.isOnline`) y si hay una solicitud en curso (`repository.isRefreshing`).
  *
  * `consultar()` solo PIDE una actualización. Si funciona, Room emite la fila nueva y la pantalla
- * cambia sola; el ViewModel nunca recibe la posición desde la red.
+ * cambia sola.
  *
  * `reloj` se recibe como parámetro para que la prueba pueda "adelantar" el tiempo.
  */
 class IssViewModel(
     private val repository: IssRepository,
+    connectivity: ConnectivityObserver,
     private val reloj: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
 
     private val ultimoError = MutableStateFlow<IssUiState.Error?>(null)
 
+    // Un solo registro del callback de red, compartido por el estado y el bucle de actualización
+    private val enLinea = connectivity.isOnline
+        .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+
     val uiState: StateFlow<IssUiState> =
-        combine(repository.latest, repository.history, ultimoError, ::construirUiState)
+        combine(repository.latest, repository.history, ultimoError, enLinea, repository.isRefreshing, ::construirUiState)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = IssUiState.Loading
             )
 
-    private var consultando = false
     private var ultimoExito: Long? = null
 
-    init {
-        consultar()
+    /** Toque en "Consultar": lanza la actualización sin esperar el resultado. */
+    fun consultar() {
+        viewModelScope.launch { actualizarSiCorresponde() }
     }
 
     /**
-     * Control de frecuencia: durante 10 s después de una consulta exitosa los toques se ignoran.
-     * También se ignoran mientras hay una consulta en curso. Así, aunque el usuario toque el
-     * botón diez veces seguidas, sale UNA solicitud y nunca se llega al 429 de la API.
+     * Control de frecuencia: durante 10 s después de una consulta exitosa los pedidos se ignoran,
+     * y también mientras hay una solicitud en curso. Aunque el usuario toque el botón diez veces
+     * seguidas, sale UNA solicitud.
+     *
+     * Es `suspend` y TERMINA cuando termina la consulta. Así el bucle de abajo puede esperar la
+     * respuesta antes de contar los 10 s siguientes.
      */
-    fun consultar() {
-        if (consultando) return
+    private suspend fun actualizarSiCorresponde() {
+        if (repository.isRefreshing.value) return
         val ultimo = ultimoExito
         if (ultimo != null && reloj() - ultimo < INTERVALO_MINIMO_MS) return
 
-        consultando = true
-        viewModelScope.launch {
-            when (val resultado = repository.refresh()) {
-                is RemoteResult.Success -> {
-                    ultimoExito = reloj()
-                    ultimoError.value = null
-                }
-                else -> ultimoError.value = resultado.aError()
+        when (val resultado = repository.refresh()) {
+            is RemoteResult.Success -> {
+                ultimoExito = reloj()
+                ultimoError.value = null
             }
-            consultando = false
+            else -> ultimoError.value = resultado.aError()
+        }
+    }
+
+    /**
+     * Actualización automática MIENTRAS LA PANTALLA ESTÁ VISIBLE. La pantalla la llama dentro de
+     * `repeatOnLifecycle(STARTED)`: al pasar a segundo plano o salir, esta función se cancela y el
+     * bucle se detiene. No queda ninguna solicitud periódica corriendo sin que nadie mire.
+     *
+     * `collectLatest` sobre "¿hay red?":
+     * - con red: consulta ahora y luego cada 10 s;
+     * - sin red: no intenta nada (sería un fallo seguro) y espera;
+     * - al volver la red (false → true): el bloque se reinicia y consulta DE INMEDIATO. Ese es
+     *   el refresh automático al reconectar.
+     * Cada cambio cancela el bucle anterior, así que nunca hay dos bucles a la vez.
+     */
+    suspend fun actualizarMientrasVisible() {
+        enLinea.collectLatest { online ->
+            if (!online) return@collectLatest
+            while (true) {
+                // Se ESPERA la respuesta y recién entonces se cuentan 10 s. Si se contara desde
+                // que sale la solicitud, una respuesta lenta haría que la vuelta siguiente cayera
+                // dentro del control de frecuencia y se saltara.
+                actualizarSiCorresponde()
+                delay(INTERVALO_MINIMO_MS)
+            }
         }
     }
 
     companion object {
         val Factory = viewModelFactory {
-            initializer { IssViewModel(appContainer().issRepository) }
+            initializer {
+                val container = appContainer()
+                IssViewModel(container.issRepository, container.connectivityObserver)
+            }
         }
     }
 }

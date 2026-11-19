@@ -66,6 +66,8 @@
     <string name="iss_ver_mapa">Ver en el mapa</string>
     <string name="iss_vacio">Aún no hay posiciones guardadas. Toca \"Consultar\" para obtener la primera.</string>
     <string name="iss_historial">Historial reciente</string>
+    <string name="iss_banner_sin_conexion">Sin conexión: mostrando la última posición conocida</string>
+    <string name="iss_banner_sin_conexion_sin_datos">Sin conexión: se actualizará cuando vuelva la red</string>
     <string name="iss_historial_fila">Lat. %1$s · Lon. %2$s</string>
     <string name="iss_hace_instantes">Medida hace instantes</string>
     <plurals name="iss_hace_minutos">
