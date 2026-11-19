@@ -14,6 +14,8 @@ import com.example.resumen_modulos1y2.iss.data.ConnectivityObserver
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.IssApiService
 import com.example.resumen_modulos1y2.iss.data.remote.agregarRegistroDeRed
+import com.example.resumen_modulos1y2.iss.work.BackgroundSync
+import com.example.resumen_modulos1y2.iss.work.IssWorkScheduler
 import com.squareup.moshi.Moshi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -88,4 +90,6 @@ class AppContainer(context: Context) {
     val issRepository: IssRepository by lazy { IssRepository(issApiService, appDatabase.issPositionDao()) }
 
     val connectivityObserver: ConnectivityObserver by lazy { AndroidConnectivityObserver(appContext) }
+
+    val issWorkScheduler: BackgroundSync by lazy { IssWorkScheduler(appContext) }
 }

@@ -6,6 +6,8 @@ import com.example.resumen_modulos1y2.iss.data.ConnectivityObserver
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.IssApiService
 import com.example.resumen_modulos1y2.iss.data.remote.IssPositionDto
+import com.example.resumen_modulos1y2.iss.domain.EstadoSincronizacion
+import com.example.resumen_modulos1y2.iss.work.BackgroundSync
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +55,12 @@ class IssViewModelTest {
         override val isOnline = MutableStateFlow(enLinea)
     }
 
+    private class SyncFalso : BackgroundSync {
+        override val estado = MutableStateFlow(EstadoSincronizacion())
+        override fun programarPeriodico() = Unit
+        override fun actualizarAhora() = Unit
+    }
+
     private val api = ApiFalsa()
     private val dao = FakeIssPositionDao()
     private val red = ConectividadFalsa()
@@ -69,7 +77,7 @@ class IssViewModelTest {
 
     // El reloj del ViewModel es el tiempo virtual de la prueba
     private fun TestScope.crearViewModel() =
-        IssViewModel(IssRepository(api, dao, reloj = { BASE_MS + currentTime }), red, reloj = { BASE_MS + currentTime })
+        IssViewModel(IssRepository(api, dao, reloj = { BASE_MS + currentTime }), red, SyncFalso(), reloj = { BASE_MS + currentTime })
 
     /** El estado que ve la pantalla, ya combinado (stateIn necesita un suscriptor para empezar). */
     private suspend fun IssViewModel.estado() = uiState.first { it != IssUiState.Loading }

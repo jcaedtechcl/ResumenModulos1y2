@@ -14,6 +14,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/**
+ * Lo ÚNICO que necesita el worker de la etapa 5: pedir una actualización. Una interfaz pequeña
+ * permite probar el worker con un repositorio falso de una línea.
+ */
+fun interface IssRefresher {
+    suspend fun refresh(): RemoteResult<Unit>
+}
+
 /** Cuánto historial se conserva en la base. */
 private const val RETENCION_SEGUNDOS = 24 * 60 * 60L
 
@@ -38,7 +46,7 @@ class IssRepository(
     private val api: IssApiService,
     private val dao: IssPositionDao,
     private val reloj: () -> Long = System::currentTimeMillis
-) {
+) : IssRefresher {
 
     val latest: Flow<IssPosition?> = dao.observeLatest().map { it?.toDomain() }
 
@@ -57,7 +65,7 @@ class IssRepository(
     /** true mientras hay una solicitud en curso; la pantalla muestra un indicador. */
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    suspend fun refresh(): RemoteResult<Unit> = mutex.withLock {
+    override suspend fun refresh(): RemoteResult<Unit> = mutex.withLock {
         _isRefreshing.value = true
         try {
             val resultado = safeApiCall { api.getPosition() }

@@ -84,6 +84,8 @@ dependencies {
     // Solo en debug: el build de release ni siquiera contiene la clase HttpLoggingInterceptor.
     // Ver src/debug y src/release: RegistroDeRed.kt.
     debugImplementation(libs.okhttp.logging.interceptor)
+    // M3 ISS: trabajo en segundo plano
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     // Servidor HTTP falso para probar la capa de red sin internet (misma versión que OkHttp)
@@ -95,6 +97,7 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(libs.androidx.work.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

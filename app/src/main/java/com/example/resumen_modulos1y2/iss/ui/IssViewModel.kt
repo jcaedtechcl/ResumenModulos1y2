@@ -8,6 +8,8 @@ import com.example.resumen_modulos1y2.appContainer
 import com.example.resumen_modulos1y2.iss.data.ConnectivityObserver
 import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.RemoteResult
+import com.example.resumen_modulos1y2.iss.domain.EstadoSincronizacion
+import com.example.resumen_modulos1y2.iss.work.BackgroundSync
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +37,7 @@ const val INTERVALO_MINIMO_MS = 10_000L
 class IssViewModel(
     private val repository: IssRepository,
     connectivity: ConnectivityObserver,
+    private val backgroundSync: BackgroundSync,
     private val reloj: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
 
@@ -52,7 +55,19 @@ class IssViewModel(
                 initialValue = IssUiState.Loading
             )
 
+    /**
+     * Estado de los trabajos de WorkManager, aparte de IssUiState: describe lo que pasa FUERA de
+     * esta pantalla (el sistema puede ejecutarlos con la app cerrada), no lo que se está viendo.
+     */
+    val estadoSegundoPlano: StateFlow<EstadoSincronizacion> = backgroundSync.estado
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), EstadoSincronizacion())
+
     private var ultimoExito: Long? = null
+
+    /** Encola un trabajo único inmediato. Con KEEP, cinco toques siguen siendo un solo trabajo. */
+    fun actualizarEnSegundoPlano() {
+        backgroundSync.actualizarAhora()
+    }
 
     /** Toque en "Consultar": lanza la actualización sin esperar el resultado. */
     fun consultar() {
@@ -110,7 +125,7 @@ class IssViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val container = appContainer()
-                IssViewModel(container.issRepository, container.connectivityObserver)
+                IssViewModel(container.issRepository, container.connectivityObserver, container.issWorkScheduler)
             }
         }
     }

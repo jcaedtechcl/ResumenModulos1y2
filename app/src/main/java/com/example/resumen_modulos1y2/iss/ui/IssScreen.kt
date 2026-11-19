@@ -17,6 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,6 +38,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.resumen_modulos1y2.R
+import com.example.resumen_modulos1y2.iss.domain.EstadoSincronizacion
+import com.example.resumen_modulos1y2.iss.domain.EstadoTrabajo
+import com.example.resumen_modulos1y2.iss.domain.FaseTrabajo
 import com.example.resumen_modulos1y2.iss.domain.IssPosition
 import com.example.resumen_modulos1y2.iss.domain.Visibilidad
 import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
@@ -48,6 +52,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val formatoHora = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
+private val formatoHoraCorta = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
 
 /**
  * Versión con estado: obtiene el ViewModel y observa su StateFlow. No importa nada de Retrofit,
@@ -60,6 +65,7 @@ fun IssRoute(
     viewModel: IssViewModel = viewModel(factory = IssViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val segundoPlano by viewModel.estadoSegundoPlano.collectAsStateWithLifecycle()
 
     // Bucle de actualización atado al ciclo de vida: repeatOnLifecycle(STARTED) ejecuta el bloque
     // al quedar visible y lo CANCELA en onStop (segundo plano, pantalla apagada). Al salir de la
@@ -71,14 +77,23 @@ fun IssRoute(
         }
     }
 
-    IssScreen(uiState = uiState, onConsultar = viewModel::consultar, onVolver = onVolver, modifier = modifier)
+    IssScreen(
+        uiState = uiState,
+        segundoPlano = segundoPlano,
+        onConsultar = viewModel::consultar,
+        onActualizarEnSegundoPlano = viewModel::actualizarEnSegundoPlano,
+        onVolver = onVolver,
+        modifier = modifier
+    )
 }
 
 /** Versión sin estado: un `when` exhaustivo sobre IssUiState decide qué se dibuja. */
 @Composable
 fun IssScreen(
     uiState: IssUiState,
+    segundoPlano: EstadoSincronizacion,
     onConsultar: () -> Unit,
+    onActualizarEnSegundoPlano: () -> Unit,
     onVolver: () -> Unit,
     modifier: Modifier = Modifier,
     ahora: Instant = relojDePantalla()
@@ -113,6 +128,7 @@ fun IssScreen(
                         }
                         item { TarjetaPosicion(uiState.position, ahora) }
                         item { Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) } }
+                        item { TarjetaSegundoPlano(segundoPlano, onActualizarEnSegundoPlano) }
                         item {
                             Text(stringResource(R.string.iss_historial), style = MaterialTheme.typography.titleMedium)
                         }
@@ -122,6 +138,10 @@ fun IssScreen(
                             HorizontalDivider()
                         }
                     }
+                }
+                // Sin datos, la tarjeta del trabajo en segundo plano va al final
+                if (uiState is IssUiState.Empty || uiState is IssUiState.Error) {
+                    item { TarjetaSegundoPlano(segundoPlano, onActualizarEnSegundoPlano) }
                 }
             }
         }
@@ -203,6 +223,36 @@ internal fun TarjetaPosicion(posicion: IssPosition, ahora: Instant, modifier: Mo
     }
 }
 
+/** Estado de WorkManager, ya traducido a EstadoSincronizacion: este archivo no importa WorkManager. */
+@Composable
+private fun TarjetaSegundoPlano(estado: EstadoSincronizacion, onActualizar: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.iss_segundo_plano), style = MaterialTheme.typography.titleMedium)
+            Dato(R.string.iss_trabajo_periodico, textoTrabajo(estado.periodico))
+            Dato(R.string.iss_trabajo_inmediato, textoTrabajo(estado.inmediato))
+            OutlinedButton(onClick = onActualizar) { Text(stringResource(R.string.iss_actualizar_segundo_plano)) }
+        }
+    }
+}
+
+@Composable
+private fun textoTrabajo(trabajo: EstadoTrabajo): String {
+    val fase = stringResource(
+        when (trabajo.fase) {
+            FaseTrabajo.SIN_PROGRAMAR -> R.string.iss_fase_sin_programar
+            FaseTrabajo.EN_COLA -> R.string.iss_fase_en_cola
+            FaseTrabajo.EN_EJECUCION -> R.string.iss_fase_en_ejecucion
+            FaseTrabajo.REINTENTANDO -> R.string.iss_fase_reintentando
+            FaseTrabajo.COMPLETADO -> R.string.iss_fase_completado
+            FaseTrabajo.FALLIDO -> R.string.iss_fase_fallido
+            FaseTrabajo.CANCELADO -> R.string.iss_fase_cancelado
+        }
+    )
+    val hora = trabajo.hora ?: return fase
+    return stringResource(R.string.iss_fase_con_hora, fase, formatoHoraCorta.format(hora))
+}
+
 @Composable
 private fun FilaHistorial(posicion: IssPosition) {
     ListItem(
@@ -265,7 +315,9 @@ private fun IssScreenPreview() {
                 history = listOf(posicionDeEjemplo),
                 sinConexion = true
             ),
+            segundoPlano = EstadoSincronizacion(periodico = EstadoTrabajo(FaseTrabajo.EN_COLA, posicionDeEjemplo.medidaEn)),
             onConsultar = {},
+            onActualizarEnSegundoPlano = {},
             onVolver = {},
             ahora = posicionDeEjemplo.medidaEn.plusSeconds(180)
         )
