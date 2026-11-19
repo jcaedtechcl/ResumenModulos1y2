@@ -8,6 +8,7 @@ import com.example.resumen_modulos1y2.iss.data.remote.IssApiService
 import com.example.resumen_modulos1y2.iss.data.remote.IssPositionDto
 import com.example.resumen_modulos1y2.iss.domain.EstadoSincronizacion
 import com.example.resumen_modulos1y2.iss.work.BackgroundSync
+import com.example.resumen_modulos1y2.model.Recordatorio
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +62,7 @@ class IssViewModelTest {
         override fun actualizarAhora() = Unit
     }
 
+    private val recordatoriosGuardados = mutableListOf<Recordatorio>()
     private val api = ApiFalsa()
     private val dao = FakeIssPositionDao()
     private val red = ConectividadFalsa()
@@ -77,7 +79,7 @@ class IssViewModelTest {
 
     // El reloj del ViewModel es el tiempo virtual de la prueba
     private fun TestScope.crearViewModel() =
-        IssViewModel(IssRepository(api, dao, reloj = { BASE_MS + currentTime }), red, SyncFalso(), reloj = { BASE_MS + currentTime })
+        IssViewModel(IssRepository(api, dao, reloj = { BASE_MS + currentTime }), red, SyncFalso(), { recordatoriosGuardados += it }, reloj = { BASE_MS + currentTime })
 
     /** El estado que ve la pantalla, ya combinado (stateIn necesita un suscriptor para empezar). */
     private suspend fun IssViewModel.estado() = uiState.first { it != IssUiState.Loading }
@@ -201,6 +203,19 @@ class IssViewModelTest {
         }
 
         assertEquals("el control de 10 s absorbe las reconexiones rápidas", 1, api.llamadas)
+    }
+
+    @Test
+    fun crearRecordatorioDeObservacion_loGuardaConElRepositorioDeRecordatorios() = runTest {
+        val viewModel = crearViewModel()
+
+        viewModel.crearRecordatorioDeObservacion("Observar la ISS", "Última posición conocida…", "Observación")
+
+        val guardado = recordatoriosGuardados.single()
+        assertEquals("Observar la ISS", guardado.titulo)
+        assertEquals("Última posición conocida…", guardado.descripcion)
+        assertEquals("Observación", guardado.categoria)
+        assertEquals("el id es un UUID", 36, guardado.id.length)
     }
 
     private companion object {

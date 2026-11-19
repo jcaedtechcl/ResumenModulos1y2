@@ -10,6 +10,7 @@ import com.example.resumen_modulos1y2.iss.data.IssRepository
 import com.example.resumen_modulos1y2.iss.data.remote.RemoteResult
 import com.example.resumen_modulos1y2.iss.domain.EstadoSincronizacion
 import com.example.resumen_modulos1y2.iss.work.BackgroundSync
+import com.example.resumen_modulos1y2.model.Recordatorio
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /** Tiempo mínimo entre consultas exitosas. La API admite ≈1 por segundo; aquí se pide 10 veces menos. */
 const val INTERVALO_MINIMO_MS = 10_000L
@@ -32,12 +34,17 @@ const val INTERVALO_MINIMO_MS = 10_000L
  * `consultar()` solo PIDE una actualización. Si funciona, Room emite la fila nueva y la pantalla
  * cambia sola.
  *
+ * `guardarRecordatorio` es `ReminderRepository::guardar` (etapa 6): la pantalla de la ISS crea
+ * recordatorios con el MISMO repositorio que usa la lista de recordatorios, y aparecen ahí solos
+ * porque esa lista observa Room.
+ *
  * `reloj` se recibe como parámetro para que la prueba pueda "adelantar" el tiempo.
  */
 class IssViewModel(
     private val repository: IssRepository,
     connectivity: ConnectivityObserver,
     private val backgroundSync: BackgroundSync,
+    private val guardarRecordatorio: suspend (Recordatorio) -> Unit,
     private val reloj: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
 
@@ -97,6 +104,22 @@ class IssViewModel(
     }
 
     /**
+     * Etapa 6: conecta la ISS con el dominio de la app. Los textos llegan ya resueltos desde la
+     * pantalla (strings.xml); aquí se arma el Recordatorio y se guarda con el repositorio
+     * existente. La entidad de recordatorios no tiene latitud ni longitud, así que la posición
+     * va en la descripción.
+     */
+    fun crearRecordatorioDeObservacion(titulo: String, descripcion: String, categoria: String) {
+        val recordatorio = Recordatorio(
+            id = UUID.randomUUID().toString(),
+            titulo = titulo,
+            descripcion = descripcion,
+            categoria = categoria
+        )
+        viewModelScope.launch { guardarRecordatorio(recordatorio) }
+    }
+
+    /**
      * Actualización automática MIENTRAS LA PANTALLA ESTÁ VISIBLE. La pantalla la llama dentro de
      * `repeatOnLifecycle(STARTED)`: al pasar a segundo plano o salir, esta función se cancela y el
      * bucle se detiene. No queda ninguna solicitud periódica corriendo sin que nadie mire.
@@ -125,7 +148,12 @@ class IssViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val container = appContainer()
-                IssViewModel(container.issRepository, container.connectivityObserver, container.issWorkScheduler)
+                IssViewModel(
+                    repository = container.issRepository,
+                    connectivity = container.connectivityObserver,
+                    backgroundSync = container.issWorkScheduler,
+                    guardarRecordatorio = container.reminderRepository::guardar
+                )
             }
         }
     }

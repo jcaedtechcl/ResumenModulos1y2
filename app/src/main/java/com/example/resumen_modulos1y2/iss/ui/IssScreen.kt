@@ -19,6 +19,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
@@ -46,6 +50,7 @@ import com.example.resumen_modulos1y2.iss.domain.Visibilidad
 import com.example.resumen_modulos1y2.ui.componentes.BarraLeccion
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,6 +87,7 @@ fun IssRoute(
         segundoPlano = segundoPlano,
         onConsultar = viewModel::consultar,
         onActualizarEnSegundoPlano = viewModel::actualizarEnSegundoPlano,
+        onCrearRecordatorio = viewModel::crearRecordatorioDeObservacion,
         onVolver = onVolver,
         modifier = modifier
     )
@@ -94,12 +100,18 @@ fun IssScreen(
     segundoPlano: EstadoSincronizacion,
     onConsultar: () -> Unit,
     onActualizarEnSegundoPlano: () -> Unit,
+    onCrearRecordatorio: (titulo: String, descripcion: String, categoria: String) -> Unit,
     onVolver: () -> Unit,
     modifier: Modifier = Modifier,
     ahora: Instant = relojDePantalla()
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val mensajeCreado = stringResource(R.string.iss_recordatorio_creado)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { BarraLeccion(titulo = stringResource(R.string.iss_titulo), onVolver = onVolver) }
     ) { innerPadding ->
         Column(Modifier.fillMaxSize().padding(innerPadding)) {
@@ -127,6 +139,13 @@ fun IssScreen(
                             item { Text(stringResource(aviso), color = MaterialTheme.colorScheme.error) }
                         }
                         item { TarjetaPosicion(uiState.position, ahora) }
+                        item {
+                            val recordatorio = textosRecordatorio(uiState.position)
+                            OutlinedButton(onClick = {
+                                onCrearRecordatorio(recordatorio.titulo, recordatorio.descripcion, recordatorio.categoria)
+                                scope.launch { snackbarHostState.showSnackbar(mensajeCreado) }
+                            }) { Text(stringResource(R.string.iss_crear_recordatorio)) }
+                        }
                         item { Button(onClick = onConsultar) { Text(stringResource(R.string.iss_consultar)) } }
                         item { TarjetaSegundoPlano(segundoPlano, onActualizarEnSegundoPlano) }
                         item {
@@ -223,6 +242,23 @@ internal fun TarjetaPosicion(posicion: IssPosition, ahora: Instant, modifier: Mo
     }
 }
 
+private data class TextosRecordatorio(val titulo: String, val descripcion: String, val categoria: String)
+
+/** Los textos del recordatorio salen de strings.xml, con la posición ya formateada. */
+@Composable
+private fun textosRecordatorio(posicion: IssPosition) = TextosRecordatorio(
+    titulo = stringResource(R.string.iss_recordatorio_titulo),
+    descripcion = stringResource(
+        R.string.iss_recordatorio_descripcion,
+        formatoHora.format(posicion.medidaEn),
+        stringResource(R.string.iss_grados, posicion.latitude),
+        stringResource(R.string.iss_grados, posicion.longitude),
+        stringResource(R.string.iss_km, posicion.altitudeKm),
+        stringResource(posicion.visibilidad.etiqueta())
+    ),
+    categoria = stringResource(R.string.iss_recordatorio_categoria)
+)
+
 /** Estado de WorkManager, ya traducido a EstadoSincronizacion: este archivo no importa WorkManager. */
 @Composable
 private fun TarjetaSegundoPlano(estado: EstadoSincronizacion, onActualizar: () -> Unit) {
@@ -318,6 +354,7 @@ private fun IssScreenPreview() {
             segundoPlano = EstadoSincronizacion(periodico = EstadoTrabajo(FaseTrabajo.EN_COLA, posicionDeEjemplo.medidaEn)),
             onConsultar = {},
             onActualizarEnSegundoPlano = {},
+            onCrearRecordatorio = { _, _, _ -> },
             onVolver = {},
             ahora = posicionDeEjemplo.medidaEn.plusSeconds(180)
         )

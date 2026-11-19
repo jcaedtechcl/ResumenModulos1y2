@@ -66,6 +66,11 @@
     <string name="iss_ver_mapa">Ver en el mapa</string>
     <string name="iss_vacio">Aún no hay posiciones guardadas. Toca \"Consultar\" para obtener la primera.</string>
     <string name="iss_historial">Historial reciente</string>
+    <string name="iss_crear_recordatorio">Crear recordatorio de observación</string>
+    <string name="iss_recordatorio_titulo">Observar la ISS</string>
+    <string name="iss_recordatorio_categoria">Observación</string>
+    <string name="iss_recordatorio_descripcion">Última posición conocida (%1$s): latitud %2$s, longitud %3$s, altitud %4$s. %5$s.</string>
+    <string name="iss_recordatorio_creado">Recordatorio creado. Lo encontrarás en Recordatorios.</string>
     <string name="iss_segundo_plano">Actualización en segundo plano</string>
     <string name="iss_trabajo_periodico">Cada 15 min</string>
     <string name="iss_trabajo_inmediato">Inmediata</string>
