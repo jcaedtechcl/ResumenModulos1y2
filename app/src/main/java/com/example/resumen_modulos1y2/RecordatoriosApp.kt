@@ -1,6 +1,8 @@
 package com.example.resumen_modulos1y2
 
 import android.app.Application
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.resumen_modulos1y2.di.AppContainer
 
 /**
@@ -18,3 +20,10 @@ class RecordatoriosApp : Application() {
         container = AppContainer(this)
     }
 }
+
+/**
+ * Atajo para las fábricas de ViewModel: Android entrega la Application en las CreationExtras
+ * y de ella se obtiene el contenedor.
+ */
+fun CreationExtras.appContainer(): AppContainer =
+    (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as RecordatoriosApp).container

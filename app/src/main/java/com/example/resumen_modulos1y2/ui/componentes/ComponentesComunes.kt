@@ -3,6 +3,7 @@ package com.example.resumen_modulos1y2.ui.componentes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -23,17 +24,19 @@ import com.example.resumen_modulos1y2.R
 // Componentes compartidos por las pantallas de ejemplo. Al estar en un solo lugar,
 // todas las lecciones se ven igual y un cambio aquí se refleja en todas.
 
-/** TopAppBar de una lección, con flecha para volver a la lista de tareas. */
+/** TopAppBar de una lección, con flecha para volver y un slot opcional de acciones. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BarraLeccion(
     titulo: String,
     onVolver: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    acciones: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
         title = { Text(titulo) },
         modifier = modifier,
+        actions = acciones,
         navigationIcon = {
             IconButton(onClick = onVolver) {
                 Icon(
@@ -45,7 +48,8 @@ fun BarraLeccion(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     )
 }

@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 
 // Módulo 3: Recordatorios con preferencias persistentes
 @Serializable object RutaRecordatorios
+@Serializable object RutaConfiguracion
 
 // Grafo anidado: asistente de nueva tarea en dos pasos
 @Serializable object GrafoNuevaTarea

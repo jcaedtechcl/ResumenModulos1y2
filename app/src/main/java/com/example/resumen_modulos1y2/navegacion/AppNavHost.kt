@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.resumen_modulos1y2.CasoRecreacionScreen
 import com.example.resumen_modulos1y2.ui.componentes.ComponentesScreen
+import com.example.resumen_modulos1y2.ui.configuracion.SettingsScreen
 import com.example.resumen_modulos1y2.ui.estado.EstadoScreen
 import com.example.resumen_modulos1y2.ui.flow.FlowScreen
 import com.example.resumen_modulos1y2.ui.layout.LayoutScreen
@@ -94,7 +95,13 @@ fun AppNavHost(
             )
         }
 
-        composable<RutaRecordatorios> { RecordatoriosRoute(onVolver = volver) }
+        composable<RutaRecordatorios> {
+            RecordatoriosRoute(
+                onVolver = volver,
+                onAbrirConfiguracion = { navController.navigate(RutaConfiguracion) { launchSingleTop = true } }
+            )
+        }
+        composable<RutaConfiguracion> { SettingsScreen(onVolver = volver) }
 
         // Subgrafo anidado: se entra con navigate(GrafoNuevaTarea) y empieza en RutaPasoTitulo
         navigation<GrafoNuevaTarea>(startDestination = RutaPasoTitulo) {

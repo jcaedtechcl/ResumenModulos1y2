@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -15,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,6 +40,7 @@ private val formatoFecha = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Local
 @Composable
 fun RecordatoriosRoute(
     onVolver: () -> Unit,
+    onAbrirConfiguracion: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RecordatoriosViewModel = viewModel()
 ) {
@@ -45,6 +49,7 @@ fun RecordatoriosRoute(
         recordatorios = recordatorios,
         onCompletadoChange = viewModel::cambiarCompletado,
         onVolver = onVolver,
+        onAbrirConfiguracion = onAbrirConfiguracion,
         modifier = modifier
     )
 }
@@ -55,12 +60,25 @@ fun RecordatoriosScreen(
     recordatorios: List<Recordatorio>,
     onCompletadoChange: (id: Long, completado: Boolean) -> Unit,
     onVolver: () -> Unit,
+    onAbrirConfiguracion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            BarraLeccion(titulo = stringResource(R.string.recordatorios_titulo), onVolver = onVolver)
+            BarraLeccion(
+                titulo = stringResource(R.string.recordatorios_titulo),
+                onVolver = onVolver,
+                acciones = {
+                    // IconButton ya mide 48 dp; contentDescription es lo que lee TalkBack
+                    IconButton(onClick = onAbrirConfiguracion) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_settings),
+                            contentDescription = stringResource(R.string.abrir_configuracion)
+                        )
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         if (recordatorios.isEmpty()) {
@@ -121,7 +139,8 @@ private fun RecordatoriosScreenPreview() {
         RecordatoriosScreen(
             recordatorios = recordatoriosDeEjemplo(),
             onCompletadoChange = { _, _ -> },
-            onVolver = {}
+            onVolver = {},
+            onAbrirConfiguracion = {}
         )
     }
 }

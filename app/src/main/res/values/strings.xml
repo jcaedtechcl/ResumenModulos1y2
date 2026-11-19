@@ -5,4 +5,17 @@
     <string name="recordatorios_titulo">Recordatorios</string>
     <string name="recordatorios_vacio">No hay recordatorios para mostrar</string>
     <string name="recordatorio_marcar">Marcar \"%1$s\" como completado</string>
+    <string name="abrir_configuracion">Abrir configuración</string>
+
+    <!-- Módulo 3: Configuración -->
+    <string name="configuracion_titulo">Configuración</string>
+    <string name="config_seccion_apariencia">Apariencia</string>
+    <string name="config_seccion_listado">Listado</string>
+    <string name="config_tema_oscuro">Tema oscuro</string>
+    <string name="config_tema_oscuro_detalle">Usa colores oscuros en toda la app</string>
+    <string name="config_mostrar_completados">Mostrar completados</string>
+    <string name="config_mostrar_completados_detalle">Incluye en el listado los recordatorios ya hechos</string>
+    <string name="config_orden">Ordenar por</string>
+    <string name="orden_por_fecha">Fecha</string>
+    <string name="orden_por_prioridad">Prioridad</string>
 </resources>
