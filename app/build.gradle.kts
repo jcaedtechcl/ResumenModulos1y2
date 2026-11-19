@@ -22,6 +22,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // M3 ISS: la URL base se lee de gradle.properties y se publica como constante de BuildConfig.
+        // Ninguna clase Kotlin la escribe a mano.
+        val issBaseUrl = providers.gradleProperty("iss.baseUrl").get()
+        buildConfigField("String", "ISS_BASE_URL", "\"$issBaseUrl\"")
     }
 
     buildTypes {
@@ -39,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -69,6 +75,15 @@ dependencies {
     // Navigation trae 1.7.3 y el APK de pruebas debe usar las mismas versiones que la app,
     // así que se sube aquí; si no, MigrationTestHelper falla con AbstractMethodError.
     implementation(libs.kotlinx.serialization.core)
+    // M3 ISS: red. Retrofit 3 se compila contra OkHttp 4.12, por eso se usa esa versión.
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.moshi)
+    ksp(libs.moshi.kotlin.codegen)
+    // Solo en debug: el build de release ni siquiera contiene la clase HttpLoggingInterceptor.
+    // Ver src/debug y src/release: RegistroDeRed.kt.
+    debugImplementation(libs.okhttp.logging.interceptor)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -2,11 +2,20 @@ package com.example.resumen_modulos1y2.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.resumen_modulos1y2.BuildConfig
 import com.example.resumen_modulos1y2.data.ReminderRepository
 import com.example.resumen_modulos1y2.data.local.AppDatabase
 import com.example.resumen_modulos1y2.data.local.MIGRATION_1_2
 import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
+import com.example.resumen_modulos1y2.iss.data.IssRepository
+import com.example.resumen_modulos1y2.iss.data.remote.IssApiService
+import com.example.resumen_modulos1y2.iss.data.remote.agregarRegistroDeRed
+import com.squareup.moshi.Moshi
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 
 /**
  * Inyección de dependencias manual: un solo lugar crea las dependencias compartidas y el resto
@@ -40,4 +49,37 @@ class AppContainer(context: Context) {
     val reminderRepository: ReminderRepository by lazy {
         ReminderRepository(appDatabase.reminderDao())
     }
+
+    // ---------------------------------------------------------------------------------------
+    // M3 ISS: red
+    //
+    // UN SOLO OkHttpClient y UN SOLO Retrofit para toda la app. Cada cliente tiene su propio
+    // pool de conexiones y de hilos: crear uno por pantalla (o por llamada) desperdicia memoria
+    // y no reutiliza conexiones HTTPS ya abiertas.
+    // ---------------------------------------------------------------------------------------
+
+    private val okHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            // Cuánto esperar para ABRIR la conexión y para RECIBIR datos. Sin límite, una red
+            // mala dejaría la pantalla cargando indefinidamente.
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            // Registro de solicitudes en Logcat: solo existe en debug (ver RegistroDeRed.kt)
+            .agregarRegistroDeRed()
+            .build()
+    }
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            // La URL viene de gradle.properties a través de BuildConfig: no está en el código
+            .baseUrl(BuildConfig.ISS_BASE_URL)
+            .client(okHttpClient)
+            // Moshi sin reflexión: usa los adaptadores que KSP generó para los DTO
+            .addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().build()))
+            .build()
+    }
+
+    private val issApiService: IssApiService by lazy { retrofit.create(IssApiService::class.java) }
+
+    val issRepository: IssRepository by lazy { IssRepository(issApiService) }
 }

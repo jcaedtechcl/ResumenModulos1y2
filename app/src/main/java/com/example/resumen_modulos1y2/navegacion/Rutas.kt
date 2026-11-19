@@ -24,6 +24,9 @@ import kotlinx.serialization.Serializable
 @Serializable object RutaRecordatorios
 @Serializable object RutaConfiguracion
 
+// Módulo 3: ¿Dónde está la ISS? (Retrofit, uso sin conexión y WorkManager)
+@Serializable object RutaIss
+
 // Grafo anidado: asistente de nueva tarea en dos pasos
 @Serializable object GrafoNuevaTarea
 @Serializable object RutaPasoTitulo
@@ -38,4 +41,5 @@ fun Leccion.ruta(): Any = when (this) {
     Leccion.Flow -> RutaFlow
     Leccion.Navegacion -> RutaNavegacion
     Leccion.Recordatorios -> RutaRecordatorios
+    Leccion.Iss -> RutaIss
 }

@@ -38,4 +38,23 @@
     <string name="config_orden">Ordenar por</string>
     <string name="orden_por_fecha">Fecha</string>
     <string name="orden_por_prioridad">Prioridad</string>
+
+    <!-- M3 ISS: ¿Dónde está la ISS? -->
+    <string name="iss_titulo">¿Dónde está la ISS?</string>
+    <string name="iss_consultar">Consultar</string>
+    <string name="iss_sin_datos">Toca \"Consultar\" para ver dónde está la Estación Espacial Internacional.</string>
+    <string name="iss_error_tecnico">Error: %1$s</string>
+    <string name="iss_latitud">Latitud</string>
+    <string name="iss_longitud">Longitud</string>
+    <string name="iss_altitud">Altitud</string>
+    <string name="iss_velocidad">Velocidad</string>
+    <string name="iss_visibilidad">Visibilidad</string>
+    <string name="iss_medida">Medida a las</string>
+    <string name="iss_grados">%1$.4f°</string>
+    <string name="iss_km">%1$.1f km</string>
+    <string name="iss_kmh">%1$,.0f km/h</string>
+    <string name="iss_visibilidad_luz">Iluminada por el Sol</string>
+    <string name="iss_visibilidad_eclipse">En la sombra de la Tierra</string>
+    <string name="iss_visibilidad_desconocida">Desconocida</string>
+    <string name="iss_ver_mapa">Ver en el mapa</string>
 </resources>

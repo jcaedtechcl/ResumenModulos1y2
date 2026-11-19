@@ -13,6 +13,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.resumen_modulos1y2.CasoRecreacionScreen
+import com.example.resumen_modulos1y2.iss.ui.IssRoute
 import com.example.resumen_modulos1y2.ui.componentes.ComponentesScreen
 import com.example.resumen_modulos1y2.ui.configuracion.SettingsScreen
 import com.example.resumen_modulos1y2.ui.estado.EstadoScreen
@@ -102,6 +103,7 @@ fun AppNavHost(
             )
         }
         composable<RutaConfiguracion> { SettingsScreen(onVolver = volver) }
+        composable<RutaIss> { IssRoute(onVolver = volver) }
 
         // Subgrafo anidado: se entra con navigate(GrafoNuevaTarea) y empieza en RutaPasoTitulo
         navigation<GrafoNuevaTarea>(startDestination = RutaPasoTitulo) {
