@@ -54,3 +54,4 @@ en clase: `git log --oneline` y `git checkout <commit>`.
 | 0 | Base: Recordatorios en memoria (se pierde todo al cerrar) | este archivo |
 | 1 | Modelo propio, claves tipadas y una única instancia de DataStore | [etapa-1.md](etapa-1.md) |
 | 2 | Leer como `Flow`, con valores por defecto seguros | [etapa-2.md](etapa-2.md) |
+| 3 | Escribir con `edit` (funciones `suspend`, transacciones atómicas) | [etapa-3.md](etapa-3.md) |

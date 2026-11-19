@@ -2,6 +2,7 @@ package com.example.resumen_modulos1y2.data.preferences
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -33,4 +34,24 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
             if (error is IOException) emit(emptyPreferences()) else throw error
         }
         .map { it.toUserPreferences() }
+
+    // Escrituras. Son `suspend` porque tocan el disco: solo pueden llamarse desde una coroutine
+    // y suspenden sin bloquear el hilo principal mientras DataStore escribe.
+    //
+    // `edit` es una transacción atómica: lee el estado actual, aplica el bloque sobre una copia
+    // (MutablePreferences) y reemplaza el archivo completo. Si algo falla, el archivo queda como
+    // estaba; nunca a medio escribir. Las otras claves se conservan porque la copia ya las trae.
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        dataStore.edit { it[PreferenceKeys.DARK_MODE] = enabled }
+    }
+
+    suspend fun setShowCompleted(show: Boolean) {
+        dataStore.edit { it[PreferenceKeys.SHOW_COMPLETED] = show }
+    }
+
+    // El enum se guarda como texto con `name`; el mapper lo vuelve a convertir al leer
+    suspend fun setReminderOrder(order: ReminderOrder) {
+        dataStore.edit { it[PreferenceKeys.REMINDER_ORDER] = order.name }
+    }
 }
