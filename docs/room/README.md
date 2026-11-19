@@ -15,6 +15,7 @@ git checkout m3-room-etapa-2    # deja el proyecto como quedó al final de la et
 |---|---|---|---|
 | 1 | `m3-room-etapa-1` | La entidad: tabla, columnas, TypeConverter y mapeadores | [etapa-1.md](etapa-1.md) |
 | 2 | `m3-room-etapa-2` | DAO (Flow, `@Upsert`, `UPDATE`, `@Delete`) y `AppDatabase` única | [etapa-2.md](etapa-2.md) |
+| 3 | `m3-room-etapa-3` | Repositorio, ViewModel con `stateIn` y pantalla que se actualiza sola | [etapa-3.md](etapa-3.md) |
 
 ## Punto de partida (decisiones documentadas)
 

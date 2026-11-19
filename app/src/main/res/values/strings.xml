@@ -3,7 +3,25 @@
 
     <!-- Módulo 3: Recordatorios -->
     <string name="recordatorios_titulo">Recordatorios</string>
-    <string name="recordatorios_vacio">No hay recordatorios para mostrar</string>
+    <string name="recordatorios_vacio">No hay recordatorios para mostrar. Toca + para crear uno.</string>
+    <string name="recordatorio_eliminar">Eliminar \"%1$s\"</string>
+    <string name="filtro_todos">Todos</string>
+    <string name="filtro_pendientes">Pendientes</string>
+    <string name="filtro_completados">Completados</string>
+
+    <!-- Formulario de nuevo recordatorio -->
+    <string name="nuevo_recordatorio">Nuevo recordatorio</string>
+    <string name="campo_titulo">Título</string>
+    <string name="campo_descripcion">Descripción (opcional)</string>
+    <string name="campo_categoria">Categoría</string>
+    <string name="campo_prioridad">Prioridad</string>
+    <string name="campo_vencimiento">Vence</string>
+    <string name="vence_sin_fecha">Sin fecha</string>
+    <string name="vence_hoy">Hoy</string>
+    <string name="vence_manana">Mañana</string>
+    <string name="vence_semana">En una semana</string>
+    <string name="guardar">Guardar</string>
+    <string name="cancelar">Cancelar</string>
     <string name="recordatorio_marcar">Marcar \"%1$s\" como completado</string>
     <string name="recordatorio_detalle">%1$s · %2$s</string>
     <string name="recordatorio_sin_fecha">Sin fecha</string>

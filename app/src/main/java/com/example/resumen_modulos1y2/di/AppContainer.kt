@@ -2,6 +2,7 @@ package com.example.resumen_modulos1y2.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.resumen_modulos1y2.data.ReminderRepository
 import com.example.resumen_modulos1y2.data.local.AppDatabase
 import com.example.resumen_modulos1y2.data.preferences.UserPreferencesRepository
 import com.example.resumen_modulos1y2.data.preferences.userPreferencesDataStore
@@ -24,8 +25,12 @@ class AppContainer(context: Context) {
     }
 
     // Única instancia de la base de datos. `lazy` la abre recién cuando alguien la pide, no al
-    // arrancar la app.
-    val appDatabase: AppDatabase by lazy {
+    // arrancar la app. Es privada: el resto de la app usa el repositorio.
+    private val appDatabase: AppDatabase by lazy {
         Room.databaseBuilder(appContext, AppDatabase::class.java, AppDatabase.NOMBRE_ARCHIVO).build()
+    }
+
+    val reminderRepository: ReminderRepository by lazy {
+        ReminderRepository(appDatabase.reminderDao())
     }
 }
