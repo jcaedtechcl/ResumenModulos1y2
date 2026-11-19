@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.resumen_modulos1y2.data.preferences.UserPreferences
 import com.example.resumen_modulos1y2.navegacion.AppNavHost
 import com.example.resumen_modulos1y2.ui.theme.ResumenModulos1y2Theme
 
@@ -21,8 +24,13 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "onCreate (savedInstanceState=${savedInstanceState != null}, recreaciones=$recreaciones)")
 
         enableEdgeToEdge()
+        val preferencesRepository = (application as RecordatoriosApp).container.userPreferencesRepository
         setContent {
-            ResumenModulos1y2Theme {
+            // Una sola fuente de verdad para el tema: la preferencia guardada, observada aquí
+            // arriba para que toda la app (y no solo Configuración) cambie de colores.
+            val preferences by preferencesRepository.preferences
+                .collectAsStateWithLifecycle(initialValue = UserPreferences())
+            ResumenModulos1y2Theme(darkTheme = preferences.darkModeEnabled) {
                 // La navegación entre pantallas la maneja el NavHost (ver navegacion/AppNavHost.kt)
                 AppNavHost(
                     recreaciones = recreaciones,

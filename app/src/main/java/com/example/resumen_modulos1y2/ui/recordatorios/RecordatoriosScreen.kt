@@ -42,7 +42,7 @@ fun RecordatoriosRoute(
     onVolver: () -> Unit,
     onAbrirConfiguracion: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RecordatoriosViewModel = viewModel()
+    viewModel: RecordatoriosViewModel = viewModel(factory = RecordatoriosViewModel.Factory)
 ) {
     val recordatorios by viewModel.recordatorios.collectAsStateWithLifecycle()
     RecordatoriosScreen(
